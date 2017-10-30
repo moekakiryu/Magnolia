@@ -1,16 +1,42 @@
 import re
 import abc
 
+PSEUDO_CLASSES = ["active","any","checked","default","dir","disabled","empty",
+                  "enabled","first","first-child","first-of-type","fullscreen",
+                  "focus","hover","indeterminate","in-range","invalid","lang",
+                  "last-child","last-of-type","left","link","not","nth-child",
+                  "nth-last-child","nth-last-of-type","nth-of-type",
+                  "only-child","only-of-type","optional","out-of-range",
+                  "read-only","read-write","required","right","root","scope",
+                  "target","valid","visited"]
+
+PSEUDO_ELEMENTS = ["after","before","cue","first-letter","first-line",
+                   "selection","backdrop","placeholder","marker",
+                   "spelling-error","grammar-error"]
+
+PSEUDO_CLASSES.sort(key=lambda i:len(i),reverse=True)
+PSEUDO_ELEMENTS.sort(key=lambda i:len(i),reverse=True)
 
 class CSSAbstract():
     __metaclass__ = abc.ABCMeta
     CSS_TOKENIZER = re.compile(r"(?P<style>(?P<selector>[^{}]*){(?P<attributes>(?:.|\n)*?)})",
                                 re.MULTILINE|re.DOTALL)
-    SELECTOR_TOKENIZER = re.compile(r"(?P<type>[#.]?)(?P<name>(?:-?[_a-zA-Z]+[_a-zA-Z0-9-]*|\*)?)"
-                                    r"(?P<attribute>(?:\[.*?\])?)(?:\s*(?P<conn_type>[> +~])\s*)?",
+
+    SELECTOR_TOKENIZER = re.compile(r"(?P<type>[#.]?)(?P<name>(?:-?[_a-zA-Z]+[_a-zA-Z0-9\-]*|\*)?)"
+                                    r"(?P<attribute>(?:\[.*?\])?)"
+                                    r"(?P<pseudo_class>(?:::?(?:{pseudo_classes})(?:\(.*?\))?)?)"
+                                    r"(?P<pseudo_element>(?:::?(?:{pseudo_elems})(?:\(.*?\))?)?)"
+                                    r"(?:\s*(?P<conn_type>[> +~])\s*)?".format(
+                                        pseudo_classes="|".join(PSEUDO_CLASSES),
+                                        pseudo_elems="|".join(PSEUDO_ELEMENTS)),
                                     re.DOTALL)
+
     FILTER_TOKENIZER = re.compile(r"\[(?P<name>-?[_a-zA-Z]+[_a-zA-Z0-9-]*)"
             r"(?:(?P<type>[*~|$^]?)=)['\"](?P<value>-?[_a-zA-Z]+[_a-zA-Z0-9-]*)['\"]\]",re.DOTALL)
+
+    PSEUDO_TOKENIZER = re.compile(r":(?P<second_colon>:?)(?P<name>{pseudo_names})"
+                                  r"(?:\((?P<argument>.*?)\))?".format(
+                                   pseudo_names="|".join(PSEUDO_CLASSES+PSEUDO_ELEMENTS)),re.DOTALL)
 
     @classmethod
     def tokenize_selector(cls, inpt):
@@ -96,10 +122,13 @@ class Element(CSSAbstract):
     ELEMENT = 1
     ID = 2
 
-    def __init__(self, element_name, element_type, attribute=None):
-        self.element_name = element_name
+    def __init__(self, element_tag, element_type, attribute_filter=None, 
+                       pseudo_class=None,pseudo_element=None):
+        self.element_tag = element_tag
         self.element_type = element_type
-        self.attribute = attribute
+        self.attribute_filter = attribute_filter
+        self.pseudo_class = pseudo_class
+        self.pseudo_element = pseudo_element
 
     def __repr__(self):
         return self.render(False)
@@ -108,15 +137,25 @@ class Element(CSSAbstract):
         return self.__repr__()
 
     def __eq__(self,other):
-        return isinstance(other,Element) and ((self.element_name==other.element_name and \
+        return isinstance(other,Element) and ((self.element_tag==other.element_tag and \
                 self.element_type==other.element_type) or \
-                (self.element_name=="*" or other.element_name=="*")) and \
-                self.attribute==other.attribute
+                (self.element_tag=="*" or other.element_tag=="*")) and \
+                self.attribute_filter==other.attribute_filter and \
+                self.pseudo_class == other.pseudo_class and \
+                self.pseudo_element == other.pseudo_element
+
 
     def __ne__(self, other):
         return not self == other
 
+    def get_copy(self):
+        return Element(self.element_tag, self.element_type, self.attribute_filter.get_copy())
+
     def get_priority(self):
+        # [Inline styles,
+        #  IDs,
+        #  Classes, attributes and pseudo-classes,
+        #  Elements and pseudo-elements]
         priority = [0,0,0,0]
         if self.element_type == Element.ID:
             priority[1]+=1
@@ -124,7 +163,11 @@ class Element(CSSAbstract):
             priority[2]+=1
         else:
             priority[3]+=1
-        if self.attribute!=None:
+        if self.pseudo_class:
+            priority[3]+=1
+        if self.pseudo_element:
+            priority[3]+=1
+        if self.attribute_filter!=None:
             priority[2]+=1
         return priority
 
@@ -135,34 +178,56 @@ class Element(CSSAbstract):
         # P.S RE:'again', I wrote the parse methods starting at the bottom
         #                 of this file
         tokenized = cls.tokenize_selector(inpt).next()
-        element_name = tokenized.group('name')
+        element_tag = tokenized.group('name')
+        if not element_tag:
+            element_tag = "*"
         if tokenized.group('type') == '.':
             element_type = cls.CLASS
         elif tokenized.groups('type') == '#':
             element_type = cls.ID
         else:
             element_type = cls.ELEMENT
+
         if tokenized.group('attribute'):
-            attribute = ElementFilter.parse(tokenized.group('attribute'))
+            attribute_filter = ElementFilter.parse(tokenized.group('attribute'))
         else:
-            attribute = None
-        return Element(element_name, element_type, attribute)
+            attribute_filter = None
+
+        if tokenized.group("pseudo_class"):
+            pseudo_class = Pseudo.parse(tokenized.group("pseudo_class"))
+        else:
+            pseudo_class = None
+        if tokenized.group("pseudo_element"):
+            pseudo_element = Pseudo.parse(tokenized.group("pseudo_element"))
+        else:
+            pseudo_element = None
+        return Element(element_tag, element_type, attribute_filter,
+                       pseudo_class, pseudo_element)
 
     def match(self, element):
+        if not element:
+            return False
         element_matches = False
         if self.element_type == Element.ID:
             element_matches = element.has_attribute("id") and \
-                   element.get_attribute("id") == self.element_name
+                   element.get_attribute("id") == self.element_tag
         elif self.element_type == Element.ELEMENT:
-            element_matches =  element.name == self.element_name
+            element_matches =  (element.tag == self.element_tag) or (self.element_tag=="*")
         elif self.element_type == Element.CLASS:
             element_matches =  element.has_attribute("class") and \
-                   re.search(r"(?:^| ){}(?:$| )".format(self.element_name),
+                   re.search(r"(?:^| ){}(?:$| )".format(self.element_tag),
                                 element.get_attribute("class"))
-        if self.attribute==None:
-            return element_matches
-        else:
-            return element_matches and self.attribute.match(element)
+        pseudo_element_matches = True
+        if self.pseudo_element:
+            pseudo_element_matches = self.pseudo_element.match(element)
+        pseudo_class_matches = True
+        if self.pseudo_class:
+            pseudo_class_matches = self.pseudo_class.match(element)
+        attribute_matches = True
+        if self.attribute_filter:
+            attribute_matches = self.attribute_filter.match(element)
+        return pseudo_element_matches and pseudo_class_matches and \
+                attribute_matches and element_matches
 
     def merge(self, other):
         if self != other:
@@ -176,9 +241,13 @@ class Element(CSSAbstract):
             rendered_string+="#"
         elif self.element_type == Element.CLASS:
             rendered_string+="."
-        rendered_string += self.element_name
-        if self.attribute != None:
-            rendered_string+="[{}]".format(self.attribute.render(inline))
+        rendered_string += self.element_tag
+        if self.attribute_filter != None:
+            rendered_string+="[{}]".format(self.attribute_filter.render(inline))
+        if self.pseudo_class != None:
+            rendered_string+=self.pseudo_class.render(inline)
+        if self.pseudo_element != None:
+            rendered_string+=self.pseudo_element.render(inline)
         return rendered_string
 
 
@@ -202,6 +271,9 @@ class ElementFilter(CSSAbstract):
 
     def __ne__(self, other):
         return not self == other
+
+    def get_copy(self):
+        return ElementFilter(self.attribute, self.filter_type, self.value)
 
     @classmethod
     def parse(cls, inpt):
@@ -275,6 +347,138 @@ class ElementFilter(CSSAbstract):
             elif self.filter_type == ElementFilter.CONTAINS_WORD:
                 return output_template.format(self.attribute,'~',self.value)
 
+class Pseudo(CSSAbstract):
+    def __init__(self, name, argument=None, has_two_colons=False):
+        self.name = name
+        self.argument = argument
+        self.has_two_colons = False # lol
+
+    def __eq__(self,other):
+        return isinstance(other, Pseudo) and \
+                (self.name==other.name and self.argument==other.argument)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def get_copy(self):
+        return Pseudo(self.name, self.argument, self.has_two_colons)
+
+    @classmethod
+    def parse(cls, inpt):
+        tokenized = re.finditer(cls.PSEUDO_TOKENIZER, inpt).next()
+        name = tokenized.group("name")
+        if tokenized.group("argument") != None:
+            argument = tokenized.group("argument").strip()
+        else:
+            argument = None
+        has_two_colons = bool(tokenized.group("second_colon"))
+        return Pseudo(name, argument, has_two_colons)
+
+    @staticmethod
+    def _parse_equation(s):
+        s=s.lower()
+        if s=="even":
+            s="2n"
+        elif s=="odd":
+            s="2n+1"
+        a = 1
+        b = 0
+        if not "n" in s:
+            try:
+                b = int(s)
+                return lambda k:k==b
+            except ValueError:
+                return lambda k:False
+        pre_n,post_n = s.split("n")
+        pre_n.replace("*","")
+        if pre_n=="-" or pre_n=="+":
+            pre_n+="1"
+        try:
+            a = int(pre_n)
+        except ValueError:
+            pass
+        try:
+            b = int(post_n)
+        except ValueError:
+            pass
+        return lambda k: ((k-b)/float(a)).is_integer() and ((k-b)/float(a))>=0
+
+    def match(self, element):
+        # unfortunately, as each pseudo-class has unique behaviour, each one
+        # has to be programmed for individually
+        #
+        # also, pseudo-classes whose behaviour can not be determined from the
+        # DOM (such as ':hover') are ignored and assumed False (to avoid 
+        # accidentally applying hover styles to a normal element, to contiue
+        # from the example before). Due to their complexity, pseudo-classes
+        # relating to input elements are not currently supported either
+        #
+        # honestly, it is a shame python does not have switch statements, as 
+        # this is the perfect case for one
+        #
+        if self.name == "empty":
+            return element.get_empty()
+        elif self.name == "first-child":
+            if element.has_parent():
+                return element.get_parent().get_tags().index(element)==0
+            else:
+                return True
+        elif self.name == "first-of-type":
+            if element.has_parent():
+                return element.get_parent().get_tags(element.tag).index(element)==0
+            else:
+                return True
+        elif self.name == "last-child":
+            if element.has_parent():
+                children = element.get_parent().get_tags()
+                return children.index(element)==len(children)-1
+            else:
+                return True
+        elif self.name == "last-of-type":
+            if element.has_parent():
+                children = element.get_parent().get_tags(element.tag)
+                return children.index(element)==len(children)-1
+            else:
+                return True
+        elif self.name == "nth-child":
+            if element.has_parent():
+                children = element.get_parent().get_tags()
+                return self._parse_equation(self.argument)(children.index(element)+1)
+            else:
+                return True
+        elif self.name == "nth-of-type":
+            if element.has_parent():
+                children = element.get_parent().get_tags(element.tag)
+                return self._parse_equation(self.argument)(children.index(element)+1)
+            else:
+                return True
+        elif self.name == "only-child":
+            if element.has_parent():
+                children = element.get_parent().get_tags()
+                return len(children)==1 and element in children
+            else:
+                return True
+        elif self.name == "only-of-type":
+            if element.has_parent():
+                children = element.get_parent().get_tags(element.tag)
+                return len(children)==1 and element in children
+            else:
+                return True
+
+    def merge(self, other):
+        if self != other:
+            raise ValueError("behavior for merging non-equivalent pseudo-elements is undefined")
+        return self
+
+    def render(self, inline=False):
+        output_string = ":"
+        if self.has_two_colons:
+            output_string+=":"
+        output_string += self.name
+        if self.argument:
+            output_string+="({})".format(self.argument)
+        return output_string
+
 
 class Selector(CSSAbstract):
     HAS_ALSO = 0
@@ -306,6 +510,12 @@ class Selector(CSSAbstract):
             return False
     def __ne__(self, other):
         return not self == other
+
+    def get_copy(self):
+        if self.head:
+            return Selector(self.tail.get_copy(), self.conn_type, self.head.get_copy())
+        else:
+            return Selector(self.tail.get_copy())
 
     def get_priority(self):
         if self.head:
@@ -443,6 +653,10 @@ class Style(CSSAbstract):
     def add_attribute(self,attribute):
         self.attributes.append(attribute)
 
+    def get_copy(self):
+        return Style(self.selector.get_copy(), 
+            *[attribute.get_copy() for attribute in self.attributes])
+
     @classmethod
     def parse(cls, inpt):
         #there should only be 1 style, so that will be the only one we care about
@@ -493,8 +707,6 @@ class StyleSheet(CSSAbstract):
         return self.__repr__()
 
     def add_style(self, style):
-        if style in self.styles:
-            self.styles.remove(style)
         self.styles.append(style)
 
     def remove_style(self, style):
@@ -507,24 +719,39 @@ class StyleSheet(CSSAbstract):
             selectors =  style.group("selector").split(",")
             for selector in selectors:
                 selector = selector.strip()
-                new_stylesheet.add_style(
-                    Style.parse("{}{{{}}}".format(selector, style.group("attributes"))))
-                
+                new_style = Style.parse("{}{{{}}}".format(selector, style.group("attributes"))) 
+                new_stylesheet.add_style(new_style)
+       
         return new_stylesheet
 
-    def match(self, element):
+    def match(self, element,collapse=True):
         matching = []
         for style in self.styles:
             if style.match(element):
                 matching.append(style)
-        return matching
+        if collapse:
+            new_style = Style("*{}")
+            for style in matching:
+                new_style.merge(style)
+            return new_style
+        else:
+            return matching
     
     def merge(self, other):
         for style in other.styles:
             if style in self.styles:
-                self.styles[self.styles.index(style)].merge(other.styles[other.styles.index(style)])
+                self.styles[self.styles.index(style)].merge(style)
             else:
                 self.styles.append(style)
+
+    def safe_merge(self, other):
+        new_stylesheet = self.get_copy()
+        for style in other.styles:
+            if style in new_stylesheet.styles:
+                new_stylesheet.styles[new_stylesheet.index(style)].merge(style)
+            else:
+                new_stylesheet.styles.append(style)
+        return new_stylesheet
 
     def render(self,inline=False):
         rendered_string = ""
