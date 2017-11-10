@@ -26,11 +26,13 @@ class Element(object):
 
     def __init__(self, tag, parent=None, **attributes):
         self.tag = tag
-        self.element_style = Style.parse("* {}")
-        self.inline_styles = StyleSheet()
+        self.element_styles = StyleSheet()
+        self.inline_style = Style.parse(Style.UNIVERSAL_EMPTY_STYLE)
         self.attributes = attributes
         self.parent = parent
         self.children = []
+
+        self.inline_style.inline =True
 
     def __repr__(self):
         return "HTMLElement('{}',{} children)".format(self.tag, len(self.children))
@@ -110,22 +112,32 @@ class Element(object):
     def get_siblings(self):
         return self.get_pre_siblings()+self.get_post_siblings()
 
-    def _apply_styles(self, stylesheet, inherited=None):
-        if inherited:
-            self.element_style.merge(inherited)
-        for style in stylesheet.match(self,False):
-            print "\nMerging {} into element: {}\n".format(style, self)+'-'*25
-            self.element_style.merge(style)
-        for style in self.inline_styles.styles:
-            self.element_style.merge(style)
-        for child in self.children:
-            child._apply_styles(stylesheet,self.element_style)
+    def _apply_styles(self, stylesheet, inherited_styles=None):
+        inline_selector = "{}>{}>Inline-Style {{}}".format(
+            ">".join([parent.tag for parent in self.get_parents()[::-1]]),self.tag)
+        if inherited_styles:
+            self.element_styles.merge(inherited_styles)
+        for style in stylesheet.match(self):
+            print "Merging {} into element: {}".format(style, self)
+            self.element_styles.merge(style)
+        if self.has_attribute("style"):
+            print "Parsing inline styles for: "+self.tag
+            self.inline_style = Style.from_rules(self.get_attribute("style"),inline_selector)
+            print "Added inline styles for: "+self.inline_style.render(StyleSheet.STYLES)
+            self.inline_style.inline = True
+            self.element_styles.merge(self.inline_style)
+        # print "MAKING INHERITED COPY"
+        inherited_styles = self.element_styles.get_copy(inherited=True)
+        # if inherited_styles.styles:
+        #     print inherited_styles.styles[-1].inherited
+        for child in self.get_tags():
+            child._apply_styles(stylesheet,inherited_styles)
 
     def apply_styles(self, stylesheet):
         self._apply_styles(stylesheet)     
 
     def reset_styles(self):
-        self.element_style = Style.parse("* {}")
+        self.element_styles = StyleSheet()
         for child in self.children:
             child.reset_styles()
 
@@ -181,7 +193,7 @@ class Element(object):
             # handle open tags
             last_tag = None
             while not tag.group("end_tag"):
-                child = Element(tag.group("name"),head,
+                child = Element(tag.group("name"),parent=head,
                     **cls._parse_attributes(tag.group("attributes")))
                 head.add_child(child)
                 if tag.group("self_closing") or child.tag in EMPTY_TAGS:
@@ -235,7 +247,7 @@ class Element(object):
     def parse(cls, inpt,head=None):
         return cls._parse(inpt,head=head)
        
-    def render(self, inline_styles=False):
+    def render(self, inline_style=False):
         attribute_string = ""
         attribute_format = '{}="{}"'
         for name, val in self.attributes.items():
@@ -250,7 +262,7 @@ class Element(object):
         output_string = output_string.format(self.tag, " ".join(
             [attribute_format.format(key,val) for key,val in self.attributes.items()]))
         for child in self.children:
-            output_string += child.render(inline_styles)
+            output_string += child.render(inline_style)
         if not self.tag in EMPTY_TAGS: 
             output_string+="</{}>".format(self.tag)
         return output_string
@@ -271,5 +283,5 @@ class TextElement(Element,object):
     def only_has_whitespace(self):
         return not bool(self.text.strip())
 
-    def render(self, inline_styles=False):
+    def render(self, inline_style=False):
         return self.text
