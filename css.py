@@ -189,15 +189,12 @@ class Rule:
 
     def get_priority(self, other):
         priority = [0,0,0]
-        # priority[0] = not self.inherited
+        priority[0] = not self.inherited
         priority[1] = self.inline
         priority[2] = self.style.selector.compare_priority(other.style.selector)
         return priority
 
     def compare_priority(self, other):
-        if self.inherited:
-            return -1
-
         self_priority = self.get_priority(other)
         other_priority = other.get_priority(other)
 
@@ -216,21 +213,18 @@ class Rule:
                 if self.style != None and other.style != None and \
                    self.compare_priority(other)<=0:
                     self.value = other.value
-                else:
-                    print "({},{}),({},{}): {} {} {}".format(self.rule, self.value, other.rule, other.value,
-                        self.compare_priority(other), self.get_priority(other), other.get_priority(self))
 
-    def get_copy(self):
-        new_rule = Rule(self.style, self.rule, self.value, self.important)
+    def get_copy(self, parent=None):
+        if parent:
+            new_rule = Rule(parent, self.rule, self.value, self.important)
+        else:
+            new_rule = Rule(self.style, self.rule, self.value, self.important)
         new_rule.inherited = self.inherited
         new_rule.inline = self.inline
         return new_rule
 
     def render(self, flags=0):
         rendered_string  = ""
-        # tmp = self.get_priority(self)
-        # tmp.extend(self.style.selector.get_priority())
-        # rendered_string += "({})".format(tmp)
         rendered_string += "{}:{}".format(self.rule,self.value)
         if not flags&CSSAbstract.INLINE:
             rendered_string = "\t"+rendered_string
@@ -344,7 +338,7 @@ class Element(CSSAbstract):
             element_matches = element.has_attribute("id") and \
                    element.get_attribute("id") == self.element_tag
         elif self.element_type == Element.ELEMENT:
-            element_matches =  (element.tag == self.element_tag) or (self.element_tag=="*")
+            element_matches =  (element.name == self.element_tag) or (self.element_tag=="*")
         elif self.element_type == Element.CLASS:
             element_matches =  element.has_attribute("class") and \
                    self.element_tag in element.get_attribute("class").split(" ")
@@ -559,7 +553,7 @@ class Pseudo(CSSAbstract):
                 return True
         elif self.name == "first-of-type":
             if element.has_parent():
-                return element.get_parent().get_tags(element.tag).index(element)==0
+                return element.get_parent().get_tags(element.name).index(element)==0
             else:
                 return True
         elif self.name == "last-child":
@@ -570,7 +564,7 @@ class Pseudo(CSSAbstract):
                 return True
         elif self.name == "last-of-type":
             if element.has_parent():
-                children = element.get_parent().get_tags(element.tag)
+                children = element.get_parent().get_tags(element.name)
                 return children.index(element)==len(children)-1
             else:
                 return True
@@ -582,7 +576,7 @@ class Pseudo(CSSAbstract):
                 return True
         elif self.name == "nth-of-type":
             if element.has_parent():
-                children = element.get_parent().get_tags(element.tag)
+                children = element.get_parent().get_tags(element.name)
                 return self._parse_equation(self.argument)(children.index(element)+1)
             else:
                 return True
@@ -594,7 +588,7 @@ class Pseudo(CSSAbstract):
                 return True
         elif self.name == "only-of-type":
             if element.has_parent():
-                children = element.get_parent().get_tags(element.tag)
+                children = element.get_parent().get_tags(element.name)
                 return len(children)==1 and element in children
             else:
                 return True
@@ -743,9 +737,13 @@ class Selector(CSSAbstract):
                         break
 
             elif self.conn_type == Selector.HAS_DIRECT_CHILD:
+                if not element.has_parent():
+                    return False
                 head_match_value = self.head.match(element.get_parent())
 
             elif self.conn_type == Selector.HAS_NEXT_SIBLING:
+                if not element.get_pre_siblings():
+                    return False
                 head_match_value = self.head.match(element.get_pre_siblings()[-1])
 
             elif self.conn_type == Selector.HAS_FOLLOWING_SIBLINGS:
@@ -801,7 +799,7 @@ class Style(CSSAbstract):
         return not self == other
 
     def __bool__(self):
-        return bool(self.rules)
+        return bool(len(self.rules))
 
     @property 
     def inline(self):
@@ -828,13 +826,11 @@ class Style(CSSAbstract):
         self.rules.append(rule)
 
     def get_copy(self, inherited=False):
-        # print "STYLE RECIEVED: {}".format(inherited)
         if inherited:
             new_style = Style(self.selector.get_copy())
             for rule in self.rules:
                 if rule.rule in INHERITED_ATTRIBUTES:
-                    new_style.add_rule(rule.get_copy())
-            # new_style.inherited = True
+                    new_style.add_rule(rule.get_copy(new_style))
         else:
             new_style = Style(self.selector.get_copy(), 
                 *[rule.get_copy() for rule in self.rules])
@@ -876,7 +872,6 @@ class Style(CSSAbstract):
             return None
         # if this has a lower priority than the other or this is inherited
         # merge the styles together
-        # if self.selector.compare_priority(other.selector)<=0 or self.inherited:
         for attribute in other.rules:
             if attribute in self.rules:
                 attribute_index = self.rules.index(attribute)
@@ -887,16 +882,10 @@ class Style(CSSAbstract):
 
     def render(self, flags=0):
         rendered_string = ""
-        # if not flags&CSSAbstract.INLINE:
-        #     if self.inherited:
-        #         rendered_string+="!!"
-        #     rendered_string+="({})".format(self.selector.get_priority())
         if flags&CSSAbstract.INLINE:
             for attribute in self.rules:
                 rendered_string+=attribute.render(flags)
         else:
-            # if self.inline:
-            #     return rendered_string
             rendered_string += self.selector.render(flags)+" {"
             for attribute in self.rules:
                 rendered_string+="\n"+attribute.render(flags)
@@ -983,7 +972,6 @@ class StyleSheet(CSSAbstract, StyleContainer):
         self.at_rules.remove(at_rule)
 
     def get_copy(self, inherited=False):
-        # print "STYLESHEET RECIEVED: {}".format(inherited)
         new_stylesheet = StyleSheet()
         for style in self.styles:
             if inherited:
@@ -1018,6 +1006,15 @@ class StyleSheet(CSSAbstract, StyleContainer):
         cls._parse_styles(new_stylesheet, inpt)
        
         return new_stylesheet
+
+    def flatten(self, new_style=None):
+        if new_style:
+            flattened_style = new_style
+        else:
+            flattened_style = Style.parse(Style.UNIVERSAL_EMPTY_STYLE)
+        for style in self.styles:
+            flattened_style.merge(style, check_equality=False)
+        return flattened_style
 
     def match(self, element):
         matching = []
