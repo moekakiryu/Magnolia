@@ -1,0 +1,7 @@
+div {
+    visibility: hidden;
+}
+
+span {
+    visibility: visible;
+}
