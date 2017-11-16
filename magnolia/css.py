@@ -151,21 +151,21 @@ class StyleContainer():
         self.styles.remove(style)
 
 
-class Rule:
-    def __init__(self, style, rule, value, important=False):
+class Property:
+    def __init__(self, style, name, value, important=False):
         self.style = style
-        self.rule = rule
+        self.name = name
         self.value = value
         self.important = important
         self.inline = False
         self.inherited = False
 
     def __repr__(self):
-        return "('{}','{}',{})".format(self.rule, self.value, self.important)
+        return "('{}','{}',{})".format(self.name, self.value, self.important)
 
     def __eq__(self, other):
         """ NOTE: this does NOT compare attrribute values """
-        return isinstance(other, Rule) and self.rule==other.rule
+        return isinstance(other, Property) and self.name==other.name
 
     def __ne__(self, other):
         return not self == other
@@ -185,7 +185,7 @@ class Rule:
         name,val = inpt.split(':',1)
         name = name.strip()
         val = val.strip()
-        return Rule(style,name, val, important)
+        return Property(style,name, val, important)
 
     def get_priority(self, other):
         priority = [0,0,0]
@@ -208,7 +208,7 @@ class Rule:
         return 0
 
     def merge(self, other):
-        if self.rule==other.rule:
+        if self.name==other.name:
             if not self.important or other.important:
                 if self.style != None and other.style != None and \
                    self.compare_priority(other)<=0:
@@ -216,16 +216,16 @@ class Rule:
 
     def get_copy(self, parent=None):
         if parent:
-            new_rule = Rule(parent, self.rule, self.value, self.important)
+            new_property = Property(parent, self.name, self.value, self.important)
         else:
-            new_rule = Rule(self.style, self.rule, self.value, self.important)
-        new_rule.inherited = self.inherited
-        new_rule.inline = self.inline
-        return new_rule
+            new_property = Property(self.style, self.name, self.value, self.important)
+        new_property.inherited = self.inherited
+        new_property.inline = self.inline
+        return new_property
 
     def render(self, flags=0):
         rendered_string  = ""
-        rendered_string += "{}:{}".format(self.rule,self.value)
+        rendered_string += "{}:{}".format(self.name,self.value)
         if not flags&CSSAbstract.INLINE:
             rendered_string = "\t"+rendered_string
             if self.important:
@@ -783,14 +783,14 @@ class Selector(CSSAbstract):
 
 class Style(CSSAbstract):
     UNIVERSAL_EMPTY_STYLE = "* {}"
-    def __init__(self,selector,*rules):
+    def __init__(self,selector,*properties):
         self.selector = selector
-        self.rules = list(rules)
+        self.properties = list(properties)
         self.inline = False
         self.inherited = False
 
     def __repr__(self):
-        return "('{}',{})".format(str(self.selector),len(self.rules))
+        return "('{}',{})".format(str(self.selector),len(self.properties))
 
     def __str__(self):
         return self.__repr__()
@@ -802,7 +802,7 @@ class Style(CSSAbstract):
         return not self == other
 
     def __bool__(self):
-        return bool(len(self.rules))
+        return bool(len(self.properties))
 
     def __nonzero__(self):
         return self.__bool__()
@@ -813,8 +813,8 @@ class Style(CSSAbstract):
 
     @inline.setter
     def inline(self, val):
-        for rule in self.rules:
-            rule.inline = val
+        for p in self.properties:
+            p.inline = val
         self._inline = val
 
     @property 
@@ -824,35 +824,51 @@ class Style(CSSAbstract):
     @inherited.setter
     def inherited(self, val):
         # print "Setting inherited to {}".format(val)
-        for rule in self.rules:
-            rule.inherited = val
+        for p in self.properties:
+            p.inherited = val
         self._inherited = val
 
-    def add_rule(self,rule):
-        self.rules.append(rule)
+    def add_property(self,p):
+        self.properties.append(p)       
+
+    def has_property(self, name):
+        for p in self.properties:
+            if p.name==name:
+                return True 
+
+    def get_property(self, name):
+        for p in self.properties:
+            if p.name==name:
+                return p
+
+    def set_property(self, name, val):
+        for p in self.properties:
+            if p.name==name:
+                p.value = val
+                break
 
     def get_copy(self, inherited=False):
         if inherited:
             new_style = Style(self.selector.get_copy())
-            for rule in self.rules:
-                if rule.rule in INHERITED_ATTRIBUTES:
-                    new_style.add_rule(rule.get_copy(new_style))
+            for p in self.properties:
+                if p.name in INHERITED_ATTRIBUTES:
+                    new_style.add_property(p.get_copy(new_style))
         else:
             new_style = Style(self.selector.get_copy(), 
-                *[rule.get_copy() for rule in self.rules])
+                *[p.get_copy() for p in self.properties])
         new_style.inline = self.inline
         new_style.inherited = inherited or self.inherited
         return new_style
 
     @classmethod
-    def from_rules(self,inpt,selector=None):
+    def from_properties(self,inpt,selector=None):
         if not selector:
             selector = Style.UNIVERSAL_EMPTY_STYLE
         selector = Selector.parse(selector) # man I love not having types in python
         new_style = Style(selector)
-        for rule in inpt.split(";"):
-            if rule:
-                new_style.add_rule(Rule.parse(rule, new_style))
+        for p in inpt.split(";"):
+            if p:
+                new_style.add_property(Property.parse(p, new_style))
         return new_style
 
     @classmethod
@@ -867,7 +883,7 @@ class Style(CSSAbstract):
         new_style = Style(selector)
         for attribute in match_obj.group("rules").split(";"):
             if attribute.strip():
-                new_style.add_rule(Rule.parse(attribute,new_style))
+                new_style.add_property(Property.parse(attribute,new_style))
         return new_style
 
     def match(self, element):
@@ -878,22 +894,22 @@ class Style(CSSAbstract):
             return None
         # if this has a lower priority than the other or this is inherited
         # merge the styles together
-        for attribute in other.rules:
-            if attribute in self.rules:
-                attribute_index = self.rules.index(attribute)
-                self.rules[attribute_index].merge(attribute)
+        for attribute in other.properties:
+            if attribute in self.properties:
+                attribute_index = self.properties.index(attribute)
+                self.properties[attribute_index].merge(attribute)
             else:
-                self.rules.append(attribute.get_copy())
+                self.properties.append(attribute.get_copy())
         return self
 
     def render(self, flags=0):
         rendered_string = ""
         if flags&CSSAbstract.INLINE:
-            for attribute in self.rules:
+            for attribute in self.properties:
                 rendered_string+=attribute.render(flags)
         else:
             rendered_string += self.selector.render(flags)+" {"
-            for attribute in self.rules:
+            for attribute in self.properties:
                 rendered_string+="\n"+attribute.render(flags)
             rendered_string+="\n}\n"
         return rendered_string

@@ -1,10 +1,11 @@
 import re
-import itertools
-from css import StyleSheet,Style, Selector
+
+from css import StyleSheet
+from css import Style
+from css import Selector
 
 # To be used as command line args 
 # ~~~~~~~~~~~~~~~~~~~~~ #
-
 AUTO_CLOSE_TAGS = True
 
 # General globs
@@ -32,9 +33,10 @@ class Element(object):
 
     def __init__(self, element_name, parent=None, **attributes):
         self.name = element_name
-        self.attributes = attributes
         self.parent = parent
         self.styles = StyleSheet()
+
+        self._attributes = attributes
         self._inline_style = Style.parse(Style.UNIVERSAL_EMPTY_STYLE)
         self._children = []
 
@@ -86,6 +88,9 @@ class Element(object):
 
     def remove_child(self, child):
         self._children.remove(child)
+
+    def clear_children(self):
+        self._children = []
 
     def get_tags(self, name=None):
         if name:
@@ -141,16 +146,16 @@ class Element(object):
         return parents
 
     def has_attribute(self, attribute):
-        return attribute in self.attributes.keys()
+        return attribute in self._attributes.keys()
 
     def get_attribute(self, attribute):
         if self.has_attribute(attribute):
-            return self.attributes[attribute]
+            return self._attributes[attribute]
         else:
             return None
 
     def set_attribute(self, attribute, value):
-        self.attributes[attribute] = str(value)
+        self._attributes[attribute] = str(value)
 
     def _apply_styles(self, stylesheet, inherited_style=None):
         special_selector = "{}>{}>{{}} {{{{}}}}".format(
@@ -160,7 +165,7 @@ class Element(object):
             self.styles.merge(inherited_style)
         if isinstance(stylesheet, int) and stylesheet&self.INLINE_STYLES:
             if self.has_attribute("style"):
-                self._inline_style = Style.from_rules(self.get_attribute("style"),
+                self._inline_style = Style.from_properties(self.get_attribute("style"),
                     special_selector.format(INLINE_STYLE_SELECTOR))
                 self._inline_style.inline = True
                 self.styles.merge(self._inline_style)
@@ -276,7 +281,7 @@ class Element(object):
     def render(self, _inline_style=False):
         attribute_string = ""
         attribute_format = '{}="{}"'
-        for name, val in self.attributes.items():
+        for name, val in self._attributes.items():
             if isinstance(val,str):
                 attribute_string += attribute_format.format(name,val)
             elif hasattr(val, "render"):
@@ -286,7 +291,7 @@ class Element(object):
         else:
             output_string = "<{} {}>"
         output_string = output_string.format(self.name, " ".join(
-            [attribute_format.format(key,val) for key,val in self.attributes.items()]))
+            [attribute_format.format(key,val) for key,val in self._attributes.items()]))
         for child in self._children:
             output_string += child.render(_inline_style)
         if not self.name in EMPTY_TAGS: 
@@ -308,6 +313,10 @@ class TextElement(Element,object):
 
     def only_has_whitespace(self):
         return not bool(self.text.strip())
+
+    @classmethod
+    def _parse(cls, inpt, found_tags=None, prev_find=None, head=None):
+        return TextElement(inpt, parent=head)
 
     def render(self, _inline_style=False):
         return self.text
