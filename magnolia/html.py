@@ -92,19 +92,28 @@ class Element(object):
     def clear_children(self):
         self._children = []
 
+    def has_child(self, child=None):
+        if not child:
+            return bool(self._children)
+        else:
+            return child in self._children
+
     def get_tags(self, name=None):
         if name:
             return filter(lambda e: not isinstance(e, TextElement) and e.name==name, self._children)
         else:
             return filter(lambda e: not isinstance(e, TextElement),self._children)
 
-    def get_empty(self):
-        for child in self._children:
-            if not isinstance(child, TextElement):
-                return False
-            elif child.text.strip() != "":
-                return False
-        return True
+    def _get_empty(self, first_call=True):
+        if not first_call and isinstance(self, Element):
+            return False
+        else:
+            return all([child._get_empty(False) for child in self._children])
+
+    def get_empty(self, ignore_singleton_tags=False):
+        if ignore_singleton_tags:
+            return False
+        return self._get_empty()
 
     def get_pre_siblings(self):
         if not self.parent:
@@ -127,6 +136,31 @@ class Element(object):
                 if not isinstance(sibling, TextElement):
                     siblings.append(sibling)
         return siblings
+
+    def get_pre_text(self):
+        if not self.parent:
+            return []
+        siblings = []
+        for sibling in self.parent._children[:self.parent._children.index(self)]:
+            if not sibling is self:
+                if isinstance(sibling, TextElement):
+                    siblings.append(sibling)
+            else:
+                break
+        return siblings
+
+    def get_post_text(self):
+        if not self.parent:
+            return []
+        siblings = []
+        for sibling in self.parent._children[self.parent._children.index(self)+1:]:
+            if not sibling is self:
+                if isinstance(sibling, TextElement):
+                    siblings.append(sibling)
+        return siblings
+
+    def get_surrounding_text(self):
+        return self.get_pre_text()+self.get_post_text()
 
     def get_siblings(self):
         return self.get_pre_siblings()+self.get_post_siblings()
@@ -189,6 +223,9 @@ class Element(object):
         self.styles = StyleSheet()
         for child in self._children:
             child.reset_styles()
+
+    def add_inline_property(self, name, value):
+        self._inline_style.add_property(name, value)
 
     @staticmethod
     def _parse_attributes(attribute_string):
@@ -313,6 +350,9 @@ class TextElement(Element,object):
 
     def only_has_whitespace(self):
         return not bool(self.text.strip())
+
+    def _get_empty(self, first_call=True):
+        return self.only_has_whitespace()
 
     @classmethod
     def _parse(cls, inpt, found_tags=None, prev_find=None, head=None):

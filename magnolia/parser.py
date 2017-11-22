@@ -42,7 +42,7 @@ class Parser:
 
         self.reference_tags_as_attributes = False
 
-        self._render_rules = []
+        self._render_rules = {}
 
     def __setattr__(self, name, val):
         if name=="reference_tags_as_attributes":
@@ -50,16 +50,6 @@ class Parser:
             html.REFERENCE_TAGS_AS_ATTRIBUTES = bool(val)
         else:
             self.__dict__[name]=val
-
-    def _validate_function(self, func):
-        argspec = inspect.getargspec(func)
-        default_arg_count = len(argspec.defaults or [])
-        req_arg_count = len(argspec.args or [])-default_arg_count
-        if not ((req_arg_count==1) or 
-                (req_arg_count<1 and (argspec.varargs or default_arg_count))):
-            raise ValueError(
-                "Function '{}' must be able to accept exactly one argument.".format(
-                    func.__name__))
 
     def _get_selector_obj(self, selector):
         selector_obj = None
@@ -70,38 +60,55 @@ class Parser:
                 selector_obj = None
         return selector_obj
 
-    def html_rule(self,priority=0,selector=None):
+    def html_rule(self,selector=None,pass_num=0):
         def decorator(func):
             # validate the function signature through inspection
-            self._validate_function(func)
+            argspec = inspect.getargspec(func)
+            default_arg_count = len(argspec.defaults or [])
+            req_arg_count = len(argspec.args or [])-default_arg_count
+            if not ((req_arg_count==1) or 
+                    (req_arg_count<1 and (argspec.varargs or default_arg_count))):
+                raise ValueError(
+                    "Function '{}' must be able to accept exactly one argument.".format(
+                        func.__name__))
             # if provided, construct the selector object
             selector_obj = self._get_selector_obj(selector)
             # the actual decorator
             @functools.wraps(func)
             def inner(element):
                 if not selector_obj or selector_obj.match(element):
-                    return func(element)
+                    if element and (not element.has_parent() or element.get_parent().has_child(element)):
+                        return func(element)
 
             # add the new function to the list of rules
-            new_rule = Rule(inner, priority)
-            if new_rule in self._render_rules:
-                self._render_rules[self._render_rules.index(new_rule)] = new_rule
+            new_rule = Rule(inner, pass_num)
+            if not new_rule.priority in self._render_rules:
+                self._render_rules[new_rule.priority] = []
+            if new_rule in self._render_rules[new_rule.priority]:
+                self._render_rules[new_rule.priority]\
+                                  [self._render_rules.index(new_rule)] = new_rule
             else:
-                self._render_rules.append(new_rule)
+                self._render_rules[new_rule.priority].append(new_rule)
             return inner
         return decorator
 
     def configure(self,**kwargs):
         for arg,val in kwargs.items():
-            if arg in self.__dict__:
+            if hasattr(self, arg) and not callable(getattr(self, arg)):
                 setattr(self, arg, val)
             else:
                 raise AttributeError("Parser object does not have attribute '{}'".format(arg))
 
+    def _func_caller(self, tag, rules):
+        for rule in rules:
+            rule.func(tag)
+
     def render(self, fname):
         html_page = page.HTMLPreprocessor(fname, root=self.project_dir, path=self.path).load()
         html_page.apply_css()
-        sorted_rules = sorted(self._render_rules,key=lambda r: r.priority)
-        for rule in sorted_rules:
-            html_page.element_tree.map(rule.func)
+        priority_list = sorted(self._render_rules.items(), key=lambda r: r[0])
+
+        for priority,rules in priority_list:
+            print "Layer {}".format(priority)
+            html_page.element_tree.map(lambda tag: self._func_caller(tag,rules))
         return html_page.element_tree

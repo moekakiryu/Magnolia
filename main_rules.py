@@ -1,23 +1,32 @@
 from magnolia import Parser
 from magnolia.css import Style
-from magnolia.html import TextElement
+from magnolia import html, css
 
 import os
 
 main = Parser(os.path.abspath('.'),path=[r"%appdata%/magnolia/styles/",])
 main.configure(
    reference_tags_as_attributes=False,
-#    style_format=
-# "{selector}{attribute} {{"
-# "    {properties}"
-# "}}",
-#     element_format="<{end:/<1.0}{name} {attributes}>",
 )
+
+HEADER_DEPTH = 2
+
+@main.html_rule()
+def validate_styles(tag):
+    if tag.has_parent() and tag.get_parent().styles.has_property("mso-hide"):
+        tag.add_inline_property("mso-hide",tag.parent.get_property("mso-hide"))
 
 @main.html_rule()
 def make_styles_inline(tag):
     if tag.styles:
         tag.set_attribute("style",tag.styles.render(Style.INLINE))
+
+@main.html_rule("td>img")
+def check_img_gaps(tag):
+    if len(tag.get_post_siblings())==0:
+        for child in tag.get_post_text():
+            if child.get_empty():
+                tag.parent.remove_child(child)         
 
 @main.html_rule(selector="table")
 def validate_tables(tag):
@@ -28,23 +37,18 @@ def validate_tables(tag):
     if not tag.has_attribute("border"):
         tag.set_attribute("border","0")
             
-@main.html_rule()
-def remove_style_tags(tag):
-    if tag.name=="style" or tag.name=="link":
+@main.html_rule(pass_num=1)
+def remove_disallowed_tags(tag):
+    if tag.name in ['style','link','script']:
         tag.parent.remove_child(tag)
 
-@main.html_rule()
-def remove_js(tag):
-    if tag.name=="script":
-        tag.parent.remove_child(tag)
-
-@main.html_rule()
-def remove_empty_styles(tag):
+@main.html_rule(pass_num=1)
+def remove_empty_tags(tag):
     if tag.get_empty():
         if tag.name=="td":
             tag.clear_children()
-            tag.add_child(TextElement.parse("&nbsp;"))
-        else:
+            tag.add_child(html.TextElement.parse("&nbsp;"))
+        elif tag.has_parent() and not tag.name in html.EMPTY_TAGS:
             tag.parent.remove_child(tag)
 
 element_tree = main.render("main.html")
