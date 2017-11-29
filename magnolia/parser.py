@@ -2,6 +2,7 @@ import functools
 import inspect
 
 import page
+from configs import config
 from css import Selector
 import html
 
@@ -43,13 +44,6 @@ class Parser:
         self.reference_tags_as_attributes = False
 
         self._render_rules = {}
-
-    def __setattr__(self, name, val):
-        if name=="reference_tags_as_attributes":
-            self.__dict__[name]= bool(val)
-            html.REFERENCE_TAGS_AS_ATTRIBUTES = bool(val)
-        else:
-            self.__dict__[name]=val
 
     def _get_selector_obj(self, selector):
         selector_obj = None
@@ -93,11 +87,11 @@ class Parser:
         return decorator
 
     def configure(self,**kwargs):
-        for arg,val in kwargs.items():
-            if hasattr(self, arg) and not callable(getattr(self, arg)):
-                setattr(self, arg, val)
+        for key,val in kwargs.items():
+            if config.has_key(key.upper()):
+                config[key.upper()] = val
             else:
-                raise AttributeError("Parser object does not have attribute '{}'".format(arg))
+                raise AttributeError("Parser object does not have attribute '{}'".format(key))
 
     def _func_caller(self, tag, rules):
         for rule in rules:

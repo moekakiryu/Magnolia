@@ -1,17 +1,13 @@
 import re
 
+from configs import config
 from css import StyleSheet
 from css import Style
 from css import Selector
 
-# To be used as command line args 
-# ~~~~~~~~~~~~~~~~~~~~~ #
-AUTO_CLOSE_TAGS = True
 
-# General globs
+# General locals
 # ~~~~~~~~~~~~~~~~~~~~~ #
-REFERENCE_TAGS_AS_ATTRIBUTES = False
-
 INHERITED_STYLE_SELECTOR = "__inherited_style"
 INLINE_STYLE_SELECTOR = "__inline_style"
 
@@ -52,7 +48,7 @@ class Element(object):
         try:
             return object.__getattribute__(self,attr)
         except AttributeError:
-            if REFERENCE_TAGS_AS_ATTRIBUTES:
+            if config.get("REFERENCE_TAGS_AS_ATTRIBUTES"):
                 found = []
                 for child in object.__getattribute__(self,"_children"):
                     if child.name==attr:
@@ -83,8 +79,21 @@ class Element(object):
             found.extend(child.filter(func))
         return found
 
-    def add_child(self, child):
-        self._children.append(child)
+    def insert_child(self, child, index=-1, **attributes):
+        if isinstance(child,str):
+            new_child = Element(child, self, **attributes)
+        elif isinstance(child, Element):
+            new_child = child
+            new_child.parent = self
+        else:
+            return
+        if index<0:
+            self._children.append(new_child)
+        else:
+            self._children.insert(index,new_child)
+
+    def add_child(self,child, **attributes):
+        self.insert_child(child,-1,**attributes)
 
     def remove_child(self, child):
         self._children.remove(child)
@@ -104,6 +113,28 @@ class Element(object):
         else:
             return filter(lambda e: not isinstance(e, TextElement),self._children)
 
+    def insert_tag(self, tag, index=-1, **attributes):
+        if isinstance(tag, str):
+            new_child = Element(tag,self,**attributes)
+        elif isinstance(tag, Element):
+            new_child = tag
+            new_child.parent = self
+        else:
+            return
+        if index<0:
+            target_index = self.parent._children.index(self.get_tags()[-1])
+            self.parent._children.insert(target_index+1, new_child) # a weird case where you add after        
+        else:
+            # convert the tag index to the child index
+            if self.get_tags():
+                target_index = self._children.index(self.get_tags()[index])
+            else:
+                target_index = 0
+            self._children.insert(target_index, new_child)    
+
+    def add_tag(self, tag, **attributes):
+        self.insert_tag(tag,-1, **attributes)
+
     def _get_empty(self, first_call=True):
         if not first_call and isinstance(self, Element):
             return False
@@ -111,7 +142,7 @@ class Element(object):
             return all([child._get_empty(False) for child in self._children])
 
     def get_empty(self, ignore_singleton_tags=False):
-        if ignore_singleton_tags:
+        if ignore_singleton_tags and self.name in EMPTY_TAGS:
             return False
         return self._get_empty()
 
@@ -159,11 +190,18 @@ class Element(object):
                     siblings.append(sibling)
         return siblings
 
+    def add_text(self, text):
+        self._children.append(TextElement(text, self))
+
     def get_surrounding_text(self):
         return self.get_pre_text()+self.get_post_text()
 
     def get_siblings(self):
         return self.get_pre_siblings()+self.get_post_siblings()
+
+    def add_pre_sibling(self, element, **attributes):
+        if isinstance(element, Element):
+            self.parent.add_child
 
     def has_parent(self):
         return bool(self.parent)
@@ -197,6 +235,9 @@ class Element(object):
 
         if inherited_style:
             self.styles.merge(inherited_style)
+        # for some reason when I wrote this, I thought it would be a good
+        # idea to add the ability to pass an integer flag to render
+        # inline styles, so that's what this is doing
         if isinstance(stylesheet, int) and stylesheet&self.INLINE_STYLES:
             if self.has_attribute("style"):
                 self._inline_style = Style.from_properties(self.get_attribute("style"),
@@ -205,7 +246,9 @@ class Element(object):
                 self.styles.merge(self._inline_style)
         else:
             for style in stylesheet.match(self):
+                print "element style: {}".format(style)
                 self.styles.merge(style)
+        print "element stylesheet: {}".format(self.styles)
 
         inherited_style = self.styles.flatten(Style.parse(
             special_selector.format(INHERITED_STYLE_SELECTOR)))
@@ -295,7 +338,7 @@ class Element(object):
                 elif tag.group("name") != head.name:
                     # look up the tree and see if it matches anything
                     if not (tag.group("name") in map(lambda e:e.name, head.get_parents()) 
-                        and AUTO_CLOSE_TAGS):
+                        and config.get("AUTO_CLOSE_TAGS")):
                             cls._raise_end_tag_error(inpt, tag, 
                                 "Expected '{}', got '{}'.".format(head.name, tag.group("name")))
             return tag
@@ -326,7 +369,10 @@ class Element(object):
         if self.name in EMPTY_TAGS:
             output_string = "<{} {}/>"
         else:
-            output_string = "<{} {}>"
+            if self._attributes:
+                output_string = "<{} {}>"
+            else:
+                output_string = "<{}{}>"
         output_string = output_string.format(self.name, " ".join(
             [attribute_format.format(key,val) for key,val in self._attributes.items()]))
         for child in self._children:
@@ -348,11 +394,8 @@ class TextElement(Element,object):
     def __str__(self):
         return self.__repr__()
 
-    def only_has_whitespace(self):
-        return not bool(self.text.strip())
-
     def _get_empty(self, first_call=True):
-        return self.only_has_whitespace()
+        return not bool(self.text.strip())
 
     @classmethod
     def _parse(cls, inpt, found_tags=None, prev_find=None, head=None):

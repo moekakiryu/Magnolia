@@ -1,18 +1,23 @@
 from magnolia import Parser
 from magnolia.css import Style
-from magnolia import html, css
+from magnolia import html, css,configs
 
 import os
 
 main = Parser(os.path.abspath('.'),path=[r"%appdata%/magnolia/styles/",])
 main.configure(
    reference_tags_as_attributes=False,
+   auto_close_tags=True,
 )
 
-HEADER_DEPTH = 2
+print configs.config
+
+used_styles = css.StyleSheet()
 
 @main.html_rule()
 def validate_styles(tag):
+    if tag.styles:
+        used_styles.merge(tag.styles)
     if tag.has_parent() and tag.get_parent().styles.has_property("mso-hide"):
         tag.add_inline_property("mso-hide",tag.parent.get_property("mso-hide"))
 
@@ -50,6 +55,12 @@ def remove_empty_tags(tag):
             tag.add_child(html.TextElement.parse("&nbsp;"))
         elif tag.has_parent() and not tag.name in html.EMPTY_TAGS:
             tag.parent.remove_child(tag)
+
+@main.html_rule("head",pass_num=999)
+def add_style_tag(tag):
+    new_tag = html.Element("style",type="text/css")
+    new_tag.add_text(used_styles.render(css.Style.AT_RULES))
+    tag.insert_child(new_tag,0)
 
 element_tree = main.render("main.html")
 tag = element_tree

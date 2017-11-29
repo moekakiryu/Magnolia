@@ -135,19 +135,21 @@ class Element(CSSAbstract):
         #  IDs,
         #  Classes, attributes and pseudo-classes,
         #  Elements and pseudo-elements]
+        #
+        # https://css-tricks.com/specifics-on-css-specificity/#article-header-id-2
         priority = [0,0,0,0]
         if self.element_type == Element.ID:
-            priority[-3]+=1
+            priority[1]+=1
         elif self.element_type == Element.CLASS:
-            priority[-2]+=1
-        else:
-            priority[-1]+=1
+            priority[2]+=1
+        elif self.element_tag!="*":
+            priority[3]+=1
         if self.pseudo_class:
-            priority[-1]+=1
+            priority[2]+=self.pseudo_class.get_priority()
         if self.pseudo_element:
-            priority[-1]+=1
+            priority[3]+=self.pseudo_class.get_priority()
         if self.attribute_filter!=None:
-            priority[-2]+=1
+            priority[2]+=1
         return priority
 
     @classmethod
@@ -344,6 +346,12 @@ class Pseudo(CSSAbstract):
 
     def __ne__(self, other):
         return not self == other
+
+    def get_priority(self):
+        if self.name != "not":
+            return 1
+        else:
+            return 0
 
     def get_copy(self):
         return Pseudo(self.name, self.argument)

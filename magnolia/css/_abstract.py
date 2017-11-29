@@ -121,7 +121,9 @@ class CSSAbstract():
                         in_comment = False
 
                 i+=1
-            # i is now at first valid {
+            if i>=len(inpt):
+                raise StopIteration
+            # i is now at first valid { or ;
             if inpt[i]==";":
                 yield SearchToken(inpt[hs:i],"",i-hs+1, False)
                 inpt = inpt[i+1:]
