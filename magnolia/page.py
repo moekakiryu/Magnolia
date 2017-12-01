@@ -83,6 +83,7 @@ class HTMLPreprocessor:
                     except IOError:
                         print "Warning: Could not read from '{}'".format(stylesheet_path)
                     if stylesheet_text:
+                        print "PARSING FILE '{}'\n".format(stylesheet_path)
                         new_stylsheet = css.StyleSheet.parse(stylesheet_text)
                         self.stylesheets.append(new_stylsheet)
             elif tag.name == "style":
@@ -100,5 +101,7 @@ class HTMLPreprocessor:
 
     def apply_css(self):
         for stylesheet in self.stylesheets:
+            print '-'*35+"\nSTART STYLESHEET\n"+'-'*35
             self.element_tree.apply_styles(stylesheet)
+            print '-'*35+"\nEND STYLESHEET\n"+'-'*35
         self.element_tree.apply_styles(html.Element.INLINE_STYLES)

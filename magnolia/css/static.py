@@ -1,7 +1,7 @@
 import re
 
 from _abstract import INHERITED_ATTRIBUTES, PSEUDO_ELEMENTS
-from _abstract import CSSAbstract, CSSParserError
+from _abstract import StaticAbstract, CSSParserError
 
 
 class Property:
@@ -79,14 +79,14 @@ class Property:
     def render(self, flags=0):
         rendered_string  = ""
         rendered_string += "{}:{}".format(self.name,self.value)
-        if not flags&CSSAbstract.INLINE:
+        if not flags&StaticAbstract.INLINE:
             rendered_string = "\t"+rendered_string
             if self.important:
                 rendered_string += "!important"
         return rendered_string+";"
 
 
-class Element(CSSAbstract):
+class Element(StaticAbstract):
     CLASS = 0
     ELEMENT = 1
     ID = 2
@@ -220,7 +220,7 @@ class Element(CSSAbstract):
 
     def render(self,flags=0):
         rendered_string = ""
-        if flags&CSSAbstract.INLINE:
+        if flags&StaticAbstract.INLINE:
             return rendered_string
         # Note that elements do not have a prefix
         if self.element_type == Element.ID:
@@ -237,7 +237,7 @@ class Element(CSSAbstract):
         return rendered_string
 
 
-class AttributeFilter(CSSAbstract):
+class AttributeFilter(StaticAbstract):
     HAS = 0
     EQUALS = 1
     STARTS_WITH = 2
@@ -316,7 +316,7 @@ class AttributeFilter(CSSAbstract):
         return self
 
     def render(self,flags=0):
-        if flags&CSSAbstract.INLINE:
+        if flags&StaticAbstract.INLINE:
             return ""
         if self.filter_type==None:
             return self.attribute
@@ -335,7 +335,7 @@ class AttributeFilter(CSSAbstract):
             elif self.filter_type == AttributeFilter.CONTAINS_WORD:
                 return output_template.format(self.attribute,'~',self.value)
 
-class Pseudo(CSSAbstract):
+class Pseudo(StaticAbstract):
     def __init__(self, name, argument=None):
         self.name = name
         self.argument = argument
@@ -465,7 +465,7 @@ class Pseudo(CSSAbstract):
         return self
 
     def render(self, flags=0):
-        if flags&CSSAbstract.INLINE:
+        if flags&StaticAbstract.INLINE:
             return ""
         output_string = ":"
         if self.name in PSEUDO_ELEMENTS:
@@ -476,7 +476,7 @@ class Pseudo(CSSAbstract):
         return output_string
 
 
-class Selector(CSSAbstract):
+class Selector(StaticAbstract):
     HAS_ALSO = 0
     HAS_CHILD = 1
     HAS_DIRECT_CHILD = 2
@@ -626,7 +626,7 @@ class Selector(CSSAbstract):
         return self
 
     def render(self, flags=0):
-        if flags&CSSAbstract.INLINE:
+        if flags&StaticAbstract.INLINE:
             return ""
 
         if self.conn_type==None or self.head==None:
@@ -644,7 +644,7 @@ class Selector(CSSAbstract):
                 return self.head.render(flags)+"~"+self.tail.render(flags)
 
 
-class Style(CSSAbstract):
+class Style(StaticAbstract):
     UNIVERSAL_EMPTY_STYLE = "* {}"
     def __init__(self,selector,*properties):
         self.selector = selector
@@ -754,7 +754,9 @@ class Style(CSSAbstract):
         return new_style
 
     def match(self, element):
-        return self.selector.match(element)
+        if self.selector.match(element):
+            return self
+        return None
 
     def merge(self, other, check_equality=True):
         if (self != other) and check_equality:
@@ -771,7 +773,7 @@ class Style(CSSAbstract):
 
     def render(self, flags=0):
         rendered_string = ""
-        if flags&CSSAbstract.INLINE:
+        if flags&StaticAbstract.INLINE:
             for attribute in self.properties:
                 rendered_string+=attribute.render(flags)
         else:

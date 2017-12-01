@@ -50,14 +50,16 @@ class CSSParserError(Exception):
     pass
 
 class SearchToken:
-    def __init__(self, head, tail, span, is_block):
+    def __init__(self, text, head, tail, span, is_block):
         self.head = head
         self.tail = tail
         self.span = span
+        self.text = text
         self.is_block = is_block 
 
-class CSSAbstract():
+class StaticAbstract():
     __metaclass__ = abc.ABCMeta
+
     AT_RULE_SELECTOR = re.compile(r"@(?P<name>[_a-zA-Z\-]+)\s+(?P<arguments>.*?)" 
                                   r"(?:;\s*$|(?P<nested>\{))",re.DOTALL|re.MULTILINE)
 
@@ -125,7 +127,7 @@ class CSSAbstract():
                 raise StopIteration
             # i is now at first valid { or ;
             if inpt[i]==";":
-                yield SearchToken(inpt[hs:i],"",i-hs+1, False)
+                yield SearchToken(inpt[hs:i+1],inpt[hs:i],"",i-hs+1, False)
                 inpt = inpt[i+1:]
                 continue
             he = i
@@ -133,6 +135,7 @@ class CSSAbstract():
             nest_layer = 1
             while nest_layer>0:
                 i += 1
+                # print "{} {} '{}'".format(len(inpt), i, inpt[i])
                 if unescaped_char('"',i) or unescaped_char("'",i):
                     if string_start:
                         if inpt[i]==string_start:
@@ -145,7 +148,7 @@ class CSSAbstract():
                     elif inpt[i]=="{" and (i==0 or (i>0 and inpt[i-1]!="\\")):
                         nest_layer +=1
             te = i
-            yield SearchToken(inpt[hs:he].strip(),inpt[ts:te].strip(),te-hs,True)
+            yield SearchToken(inpt[hs:te+1].strip(),inpt[hs:he].strip(),inpt[ts:te].strip(),te-hs,True)
             inpt = inpt[te+1:].strip()
 
     @classmethod
@@ -157,35 +160,35 @@ class CSSAbstract():
                     found.append(result)
             return iter(found)
 
-    @classmethod
-    def _parse_at_rules(cls, inpt):
-        while inpt:
-            find = re.finditer(cls.AT_RULE_SELECTOR,inpt)
-            if find:
-                next_find = find.next()
-            else:
-                break
-            rule_dict = {'name':next_find.group("name"),
-                         'arguments':next_find.group("arguments"),
-                         'end':next_find.group("nested"),
-                         'match':next_find,
-                         'span':(0,0),
-                         'content':None}
-            if next_find.group("nested"):
-                nest_layer = 1
-                i = next_find.end()
-                while nest_layer>0:
-                    i+=1
-                    if inpt[i]=="{":
-                        nest_layer+=1
-                    elif inpt[i]=="}":
-                        nest_layer-=1
-                rule_dict['content'] = inpt[next_find.end():i]
-                rule_dict['span'] = (next_find.start(),i)
-            else:
-                rule_dict['span'] = next_find.span()
-            yield rule_dict # this is supposed to mimic the behavior of finditer
-            inpt = inpt[i:]
+    # @classmethod
+    # def _parse_at_rules(cls, inpt):
+    #     while inpt:
+    #         find = re.finditer(cls.AT_RULE_SELECTOR,inpt)
+    #         if find:
+    #             next_find = find.next()
+    #         else:
+    #             break
+    #         rule_dict = {'name':next_find.group("name"),
+    #                      'arguments':next_find.group("arguments"),
+    #                      'end':next_find.group("nested"),
+    #                      'match':next_find,
+    #                      'span':(0,0),
+    #                      'content':None}
+    #         if next_find.group("nested"):
+    #             nest_layer = 1
+    #             i = next_find.end()
+    #             while nest_layer>0:
+    #                 i+=1
+    #                 if inpt[i]=="{":
+    #                     nest_layer+=1
+    #                 elif inpt[i]=="}":
+    #                     nest_layer-=1
+    #             rule_dict['content'] = inpt[next_find.end():i]
+    #             rule_dict['span'] = (next_find.start(),i)
+    #         else:
+    #             rule_dict['span'] = next_find.span()
+    #         yield rule_dict # this is supposed to mimic the behavior of finditer
+    #         inpt = inpt[i:]
 
     @abc.abstractmethod
     def get_copy(self):
@@ -206,4 +209,10 @@ class CSSAbstract():
     @abc.abstractmethod
     def render(self, flags=0):
         return
-        
+
+class DynamicAbstract():
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def evaluate(self, environment=None):
+        return

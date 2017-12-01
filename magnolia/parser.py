@@ -102,7 +102,8 @@ class Parser:
         html_page.apply_css()
         priority_list = sorted(self._render_rules.items(), key=lambda r: r[0])
 
+        print '-'*35+"\nAPPLYING RULES\n"+'-'*35
         for priority,rules in priority_list:
-            print "Layer {}".format(priority)
+            print "\nLayer {}\n".format(priority)+'-'*15
             html_page.element_tree.map(lambda tag: self._func_caller(tag,rules))
         return html_page.element_tree

@@ -22,6 +22,8 @@ class HTMLParserError(Exception):
     pass
 
 class Element(object):
+    # I am sorry bobince
+    # https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags#answer-1732454
     HTML_TOKENIZER = re.compile(r"<\s*(?P<end_tag>/)?\s*(?P<name>[a-zA-Z\-]+)\s*"
                                 r"(?P<attributes>(?:\s+[a-zA-Z0-9\-]+=[\"'].*?[\"'])*)"
                                 r"\s*(?P<self_closing>/?)\s*>",re.DOTALL)
@@ -229,16 +231,21 @@ class Element(object):
     def set_attribute(self, attribute, value):
         self._attributes[attribute] = str(value)
 
+    def has_styles(self):
+        return bool(self.styles)
+
     def _apply_styles(self, stylesheet, inherited_style=None):
         special_selector = "{}>{}>{{}} {{{{}}}}".format(
             ">".join([parent.name for parent in self.get_parents()[::-1]]),self.name)
 
+        print self.name
         if inherited_style:
             self.styles.merge(inherited_style)
         # for some reason when I wrote this, I thought it would be a good
         # idea to add the ability to pass an integer flag to render
         # inline styles, so that's what this is doing
         if isinstance(stylesheet, int) and stylesheet&self.INLINE_STYLES:
+            print "  applying: inline styles"
             if self.has_attribute("style"):
                 self._inline_style = Style.from_properties(self.get_attribute("style"),
                     special_selector.format(INLINE_STYLE_SELECTOR))
@@ -246,9 +253,11 @@ class Element(object):
                 self.styles.merge(self._inline_style)
         else:
             for style in stylesheet.match(self):
-                print "element style: {}".format(style)
+                # print "element style: {}".format(style)
                 self.styles.merge(style)
-        print "element stylesheet: {}".format(self.styles)
+                print "  applying:",self.styles,style
+            print "  APPLIED: {}\n".format(self.styles)
+        # print "element stylesheet: {}".format(self.styles)
 
         inherited_style = self.styles.flatten(Style.parse(
             special_selector.format(INHERITED_STYLE_SELECTOR)))
@@ -256,11 +265,8 @@ class Element(object):
         for child in self.get_tags():
             child._apply_styles(stylesheet, inherited_style)
 
-    def has_styles(self):
-        return bool(self.styles)
-
     def apply_styles(self, stylesheet):
-        self._apply_styles(stylesheet)     
+        self._apply_styles(stylesheet)   
 
     def reset_styles(self):
         self.styles = StyleSheet()
