@@ -1,25 +1,91 @@
+import sys,os
+import time
+import urllib2
+import multiprocessing
+
 from magnolia import Parser
 from magnolia.css import Style
-from magnolia import html, css,configs
+from magnolia import html, css
 
-import sys,os
+class ShellColors:
+    _base = "\33[{bold:1d};{color}m"
+    reset = "\33[m"
+    red = _base.format(color=31, bold=False)
+    green = _base.format(color=32, bold=False)
+    yellow = _base.format(color=33, bold=False)
+    blue = _base.format(color=34, bold=False)
+    pink = _base.format(color=35, bold=False)
+    teal = _base.format(color=36, bold=False)
+    white = _base.format(color=37, bold=False)
+
+    bred = _base.format(color=31, bold=True)
+    bgreen = _base.format(color=32, bold=True)
+    byellow = _base.format(color=33, bold=True)
+    bblue = _base.format(color=34, bold=True)
+    bpink = _base.format(color=35, bold=True)
+    bteal = _base.format(color=36, bold=True)
+    bwhite = _base.format(color=37, bold=True)
+
+    @staticmethod
+    def colorify(string, color):
+        return color+str(string)+ShellColors.reset
+
+running_in_idle = 'idlelib.run' in sys.modules
 
 main = Parser(os.path.abspath('.'),path=[r"%appdata%/magnolia/styles/",])
 main.configure(
    reference_tags_as_attributes=False,
    auto_close_tags=False,
 )
-
 used_styles = css.StyleSheet()
+
+NUM_PROCESSES = 5
+url_queue = multiprocessing.Queue()
+
+def url_worker(queue):
+    while True:
+        tag,url = queue.get()
+        if not tag or not url:
+            break
+        req = urllib2.Request(url)
+        req.get_method = lambda:"HEAD"
+        try:
+            resp = urllib2.urlopen(req,timeout=5)
+            resp_code = resp.getcode()
+        except urllib2.HTTPError as e:
+            resp_code = e.getcode()
+        except urllib2.URLError as e:
+            print "  {}:'{}' ({})".format(ShellColors.colorify("t/o",ShellColors.yellow),
+                                          url,tag.name)            
+            continue
+        if resp_code/100==2:
+            print "  {}:'{}' ({})".format(ShellColors.colorify(resp_code,ShellColors.green),
+                                          url,tag.name)
+        else:
+            print "  {}:'{}' ({})".format(ShellColors.colorify(resp_code,ShellColors.red),
+                                          url,tag.name)
 
 @main.html_rule()
 def validate_styles(tag):
     if tag.styles:
-        print tag.styles
-        print tag.styles.at_rules
         used_styles.merge(tag.styles)
     if tag.has_parent() and tag.get_parent().styles.has_property("mso-hide"):
         tag.add_inline_property("mso-hide",tag.parent.get_property("mso-hide"))
+
+@main.html_rule()
+def validate_urls(tag):
+    if tag.has_attribute("href"):
+        url = tag.get_attribute("href").lower()
+        if url.startswith("http://") or url.startswith("https://"):
+            url_queue.put((tag,url))
+    if tag.has_attribute("src"):
+        url = tag.get_attribute("src").lower()
+        if url.startswith("http://") or url.startswith("https://"):
+            url_queue.put((tag,url))
+    if tag.has_attribute("data"):
+        url = tag.get_attribute("data").lower()
+        if url.startswith("http://") or url.startswith("https://"):
+            url_queue.put((tag,url))
 
 @main.html_rule()
 def make_styles_inline(tag):
@@ -56,16 +122,26 @@ def remove_empty_tags(tag):
         elif tag.has_parent() and not tag.name in html.EMPTY_TAGS:
             tag.parent.remove_child(tag)
 
-@main.html_rule("head",pass_num=999)
+@main.html_rule("html>head:first-child",pass_num=999)
 def add_style_tag(tag):
     new_tag = html.Element("style",type="text/css")
-    print used_styles.at_rules
-    print used_styles.render(Style.AT_RULES)
     new_tag.add_text(used_styles.render(Style.AT_RULES))
     tag.insert_child(new_tag,0)
 
-main_stdout = sys.stdout
-sys.stdout = file(os.devnull,'w')
+s_time = time.time()
+print "Parsing element tree:\n"
+
+if not running_in_idle:
+    url_process_pool = multiprocessing.Pool(NUM_PROCESSES,url_worker,initargs=(url_queue,))
+
 element_tree = main.render("main.html")
-tag = element_tree
-sys.stdout = main_stdout
+
+if not running_in_idle:
+    for process in range(NUM_PROCESSES):
+        url_queue.put((None, None))
+    url_queue.close()
+    url_process_pool.close()
+    url_process_pool.join()
+
+e_time = time.time()
+print "\nFinished in {:.2f}s".format(e_time-s_time)

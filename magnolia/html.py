@@ -234,39 +234,30 @@ class Element(object):
     def has_styles(self):
         return bool(self.styles)
 
-    def _apply_styles(self, stylesheet, inherited_style=None):
+    def _apply_styles(self, inherited_style=None, *stylesheets):
         special_selector = "{}>{}>{{}} {{{{}}}}".format(
             ">".join([parent.name for parent in self.get_parents()[::-1]]),self.name)
 
-        print self.name
         if inherited_style:
             self.styles.merge(inherited_style)
-        # for some reason when I wrote this, I thought it would be a good
-        # idea to add the ability to pass an integer flag to render
-        # inline styles, so that's what this is doing
-        if isinstance(stylesheet, int) and stylesheet&self.INLINE_STYLES:
-            print "  applying: inline styles"
-            if self.has_attribute("style"):
-                self._inline_style = Style.from_properties(self.get_attribute("style"),
-                    special_selector.format(INLINE_STYLE_SELECTOR))
-                self._inline_style.inline = True
-                self.styles.merge(self._inline_style)
-        else:
-            for style in stylesheet.match(self):
-                # print "element style: {}".format(style)
-                self.styles.merge(style)
-                print "  applying:",self.styles,style
-            print "  APPLIED: {}\n".format(self.styles)
-        # print "element stylesheet: {}".format(self.styles)
+        if stylesheets:
+            for stylesheet in stylesheets:
+                for style in stylesheet.match(self):
+                    self.styles.merge(style)
+        elif self.has_attribute("style"):
+            self._inline_style = Style.from_properties(self.get_attribute("style"),
+                special_selector.format(INLINE_STYLE_SELECTOR))
+            self._inline_style.inline = True
+            self.styles.merge(self._inline_style)
 
         inherited_style = self.styles.flatten(Style.parse(
             special_selector.format(INHERITED_STYLE_SELECTOR)))
         inherited_style.inherited = True
         for child in self.get_tags():
-            child._apply_styles(stylesheet, inherited_style)
+            child._apply_styles(inherited_style, *stylesheets)
 
-    def apply_styles(self, stylesheet):
-        self._apply_styles(stylesheet)   
+    def apply_styles(self, *stylesheets):
+        self._apply_styles(None, *stylesheets)   
 
     def reset_styles(self):
         self.styles = StyleSheet()

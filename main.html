@@ -1,9 +1,22 @@
 <html>
     <head>
         <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/bootstrap-grid.css">
+        <link rel="stylesheet" href="css/bootstrap.css">
         <link rel="stylesheet" href="/fromroot.css">
         <link rel="stylesheet" href="/magnolia/dev/parser2.css">
         <style>
+            @media screen and (max-width:5px) {
+                .spec4 {
+                    font-weight: normal;
+                }
+                .f4-ar1-s2 {
+                    background-color: #f00000;
+                }
+                .f4-ar1-s3 {
+                    background-color: #0f0000;
+                }
+            }
             div {
                 color: #ffffff;
             }
@@ -14,6 +27,17 @@
     </head>
     <body>
         <style>
+            @media screen and (max-width:5px) {
+                .spec5 {
+                    font-weight: normal;
+                }
+                .f5-ar1-s2 {
+                    background-color: #00f000;
+                }
+                .f5-ar1-s3 {
+                    background-color: #000f00;
+                }
+            }
             div {
                 font-size:10px;
             }
@@ -25,15 +49,18 @@
             }
         </style>
         <div>foo</div>
+        <img src="http://www.facebook.com">
+        <img src="http://www.google.com/404">
+        <img src="http://10.255.255.1/">
         <table>
-            <tr class="nested-4">
-                <td>
+            <tr class="nested-4 retro">
+                <td class="f5-ar1-s3">
                     not empty
                 </td>
-                <td class="spec1 spec2">
+                <td class="f4-ar1-s3 f4-ar1-s2">
                     
                 </td>
-                <td class="foo"></td>
+                <td class="foo f4-ar1-s2 f4-ar1-s3 f5-ar1-s3 f5-ar1-s2"></td>
             </tr>
             <tr>
                 <td><img src="foo.jpg"></td>
@@ -48,5 +75,963 @@
             </tr>
         </table>
         <span>bar<div>sub</div></span>
+        <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+                <div class="responsive-carousel">
+            <ul class="responsive-orbit bottom-shadow" data-orbit data-options="timer: false; slide_number: false; swipe: true; circular: true; variable_height: true; next_class: ms-nav-next; prev_class: ms-nav-prev; next_on_click: false;">
+                <li data-orbit-slide="slide-1">
+                    <div class="slide">
+                        <div class="small-12 medium-6 large-6 columns no-padding bottom-shadow">
+                            <img class="banner" src="http://www.google.com" alt="image" >
+                        </div>
+                        <div class="small-12 medium-6 large-6 columns no-padding fixed-height">
+                            <div class="banner-pattern"></div>
+                            <img class="slide-bg" src="http://www.google.com" style="visibility:hidden;" alt="image" >
+                            <div class="slide-text small-text-center mobile-text">
+                                <h2>Bedroom</h2>
+                                <p class="product-info">Create a bold look that comfortably incorporates raw materials, patterns and textures to your room and works all year round!</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="banner-arrow hide-for-small">
+                <a href="#leftNaveCount" class="icon-arrow-down" style="display: inline;"></a>
+            </div>
+            <div class="responsive-carousel-scroll">
+                <div class="responsive-carousel-thumb-container">
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/444508">
+                            <img src="http://www.google.com" alt="Shop All"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span>Shop all</span></p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-bedroom/444509">
+                            <img src="http://www.google.com" alt="Bedroom"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important"><span class="carousel-active">Bedroom</span></p>
+                        </a> 
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-dining/444510">
+                            <img src="http://www.google.com" alt="Dining"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Dining</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-living-room/444511">
+                            <img src="http://www.google.com" alt="Living room"/>
+                            <p class="carousel-bullet" style="white-space:pre-wrap !important">Living room</p>
+                        </a>
+                    </div>
+                    <div class="ms-thumb mobile-right-spacing">
+                        <a href="/category/home-&-garden/trend/modern-simplicity/modern-simplicity-home-office/444505">
+                            <img src="http://www.google.com" alt="Home office"/>
+                            <p class="carousel-bullet " style="white-space:pre-wrap !important"><span>Home office</span></p>
+                        </a>
+                    </div>    
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .retro {
+                background: #ff0f0f;
+            }
+        </style>
     </body>
 </html>

@@ -1,3 +1,12 @@
+@media screen and (max-width:5px) {
+    body {
+        content-src2:"fromroot.css";
+    }
+    tr>td:first-child {
+        color:red;
+    }
+}
+
 div {
     direction: left;
 }

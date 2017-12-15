@@ -1,10 +1,10 @@
 import re
 
 from _abstract import INHERITED_ATTRIBUTES, PSEUDO_ELEMENTS
-from _abstract import StaticAbstract, CSSParserError
+from _abstract import CSSAbstract, StaticAbstract, CSSParserError
 
 
-class Property:
+class Property():
     def __init__(self, style, name, value, important=False):
         self.style = style
         self.name = name
@@ -79,7 +79,7 @@ class Property:
     def render(self, flags=0):
         rendered_string  = ""
         rendered_string += "{}:{}".format(self.name,self.value)
-        if not flags&StaticAbstract.INLINE:
+        if not flags&CSSAbstract.INLINE:
             rendered_string = "\t"+rendered_string
             if self.important:
                 rendered_string += "!important"
@@ -158,29 +158,29 @@ class Element(StaticAbstract):
         # again, there should only be one element passed anyway
         # P.S RE:'again', I wrote the parse methods starting at the bottom
         #                 of this file
-        tokenized = cls._tokenize_selector(inpt).next()
-        element_tag = tokenized.group('name')
-        if not element_tag:
-            element_tag = "*"
-        if tokenized.group('type') == '.':
+        tokenized = cls._tokenize_selector(inpt)[0]
+        element_tag = tokenized.name
+        # if not element_tag:
+        #     element_tag = "*"
+        if tokenized.type == '.':
             element_type = cls.CLASS
-        elif tokenized.group('type') == '#':
+        elif tokenized.type == '#':
             element_type = cls.ID
         else:
             element_type = cls.ELEMENT
             element_tag = element_tag
 
-        if tokenized.group('attribute'):
-            attribute_filter = AttributeFilter.parse(tokenized.group('attribute'))
+        if tokenized.attribute:
+            attribute_filter = AttributeFilter.parse(tokenized.attribute)
         else:
             attribute_filter = None
 
-        if tokenized.group("pseudo_class"):
-            pseudo_class = Pseudo.parse(tokenized.group("pseudo_class"))
+        if tokenized.pseudo_class:
+            pseudo_class = Pseudo.parse(tokenized.pseudo_class)
         else:
             pseudo_class = None
-        if tokenized.group("pseudo_element"):
-            pseudo_element = Pseudo.parse(tokenized.group("pseudo_element"))
+        if tokenized.pseudo_element:
+            pseudo_element = Pseudo.parse(tokenized.pseudo_element)
         else:
             pseudo_element = None
         return Element(element_tag, element_type, attribute_filter,
@@ -192,14 +192,17 @@ class Element(StaticAbstract):
             return False
         element_matches = False
         if self.element_type == Element.ID:
-            element_matches = element.has_attribute("id") and \
-                   element.get_attribute("id") == self.element_tag
+            element_matches = (element.has_attribute("id")
+                                and (not self.element_tag 
+                                or element.get_attribute("id") == self.element_tag))
         elif self.element_type == Element.ELEMENT:
-            element_matches = (element.name.lower() == self.element_tag.lower()) \
-                                or (self.element_tag=="*")
+            element_matches = (element.name.lower()==self.element_tag.lower()
+                                or self.element_tag=="*" 
+                                or not self.element_tag)
         elif self.element_type == Element.CLASS:
-            element_matches =  element.has_attribute("class") and \
-                   self.element_tag in element.get_attribute("class").split(" ")
+            element_matches =  (element.has_attribute("class") 
+                                and (self.element_tag in element.get_attribute("class").split(" "))
+                                or not self.element_tag)
             
         attribute_matches = True
         if self.attribute_filter:
@@ -210,8 +213,8 @@ class Element(StaticAbstract):
         pseudo_class_matches = True
         if self.pseudo_class:
             pseudo_class_matches = self.pseudo_class.match(element)
-        return pseudo_element_matches and pseudo_class_matches and \
-                attribute_matches and element_matches
+        return bool(pseudo_element_matches and pseudo_class_matches and \
+                attribute_matches and element_matches)
 
     def merge(self, other):
         if self != other:
@@ -220,7 +223,7 @@ class Element(StaticAbstract):
 
     def render(self,flags=0):
         rendered_string = ""
-        if flags&StaticAbstract.INLINE:
+        if flags&CSSAbstract.INLINE:
             return rendered_string
         # Note that elements do not have a prefix
         if self.element_type == Element.ID:
@@ -316,7 +319,7 @@ class AttributeFilter(StaticAbstract):
         return self
 
     def render(self,flags=0):
-        if flags&StaticAbstract.INLINE:
+        if flags&CSSAbstract.INLINE:
             return ""
         if self.filter_type==None:
             return self.attribute
@@ -348,23 +351,10 @@ class Pseudo(StaticAbstract):
         return not self == other
 
     def get_priority(self):
-        if self.name != "not":
-            return 1
-        else:
-            return 0
+        return 1
 
     def get_copy(self):
         return Pseudo(self.name, self.argument)
-
-    @classmethod
-    def parse(cls, inpt):
-        tokenized = re.finditer(cls.PSEUDO_TOKENIZER, inpt).next()
-        name = tokenized.group("name")
-        if tokenized.group("argument") != None:
-            argument = tokenized.group("argument").strip()
-        else:
-            argument = None
-        return Pseudo(name, argument)
 
     @staticmethod
     def _parse_equation(inpt):
@@ -394,6 +384,19 @@ class Pseudo(StaticAbstract):
         except ValueError:
             pass
         return lambda k: ((k-b)/float(a)).is_integer() and ((k-b)/float(a))>=0
+
+    @classmethod
+    def parse(cls, inpt):
+        tokenized = re.finditer(cls.PSEUDO_TOKENIZER, inpt).next()
+        name = tokenized.group("name")
+        if tokenized.group("argument") != None:
+            if name=="nth-child" or name=="nth-of-type":
+                argument = cls._parse_equation(tokenized.group("argument").strip())
+            else:
+                argument = Selector.parse(tokenized.group("argument").strip())
+        else:
+            argument = None
+        return Pseudo(name, argument)
 
     def match(self, element):
         # unfortunately, as each pseudo-class has unique behaviour, each one
@@ -435,13 +438,13 @@ class Pseudo(StaticAbstract):
         elif self.name == "nth-child":
             if element.has_parent():
                 children = element.get_parent().get_tags()
-                return self._parse_equation(self.argument)(children.index(element)+1)
+                return self.argument(children.index(element)+1)
             else:
                 return True
         elif self.name == "nth-of-type":
             if element.has_parent():
                 children = element.get_parent().get_tags(element.name)
-                return self._parse_equation(self.argument)(children.index(element)+1)
+                return self.argument(children.index(element)+1)
             else:
                 return True
         elif self.name == "only-child":
@@ -457,7 +460,7 @@ class Pseudo(StaticAbstract):
             else:
                 return True
         elif self.name == "not":
-            return not Selector.parse(self.argument).match(element)
+            return not self.argument.match(element)
 
     def merge(self, other):
         if self != other:
@@ -465,7 +468,7 @@ class Pseudo(StaticAbstract):
         return self
 
     def render(self, flags=0):
-        if flags&StaticAbstract.INLINE:
+        if flags&CSSAbstract.INLINE:
             return ""
         output_string = ":"
         if self.name in PSEUDO_ELEMENTS:
@@ -546,6 +549,18 @@ class Selector(StaticAbstract):
         return 0
 
     def get_fragment(self, n_frags=0):
+        """ get n_frags part of the selector, 
+            starting with the first appearing segment
+
+        for instace if 
+    
+        foo = Selector.parse('.class1 .class2 > div + span')
+
+        then
+
+        foo.get_fragment(3) --> '.class1 .class2 > div'
+
+        """ 
         if n_frags<1:
             return self
         else:
@@ -560,24 +575,26 @@ class Selector(StaticAbstract):
     @classmethod
     def parse(cls, inpt):
         inpt = inpt.strip()
-        tokens = list(cls._tokenize_selector(inpt))
+        tokens = cls._tokenize_selector(inpt)
         element = tokens[-1]
-        tail = Element.parse(''.join(element.groups()[:-1]))
+        tail = Element.parse(''.join([element.type, element.name,
+                                      element.attribute, element.pseudo_class, 
+                                      element.pseudo_element]))
 
         if len(tokens)>1:
             parent = tokens[-2]
-            if parent.group("conn_type"):
-                if parent.group("conn_type")==" ":
+            if parent.conn_type:
+                if parent.conn_type==" ":
                     conn_type = Selector.HAS_CHILD
-                elif parent.group("conn_type")==">":
+                elif parent.conn_type==">":
                     conn_type = Selector.HAS_DIRECT_CHILD
-                elif parent.group("conn_type")=="+":
+                elif parent.conn_type=="+":
                     conn_type = Selector.HAS_NEXT_SIBLING
-                elif parent.group("conn_type")=="~":
+                elif parent.conn_type=="~":
                     conn_type = Selector.HAS_FOLLOWING_SIBLINGS
             elif len(tokens)>1:
                 conn_type = Selector.HAS_ALSO
-            selector_string = ''.join([''.join([s or '' for s in t.groups()]) for t in tokens[:-1]])
+            selector_string = ''.join([t.joined() for t in tokens[:-1]])
             if len(tokens)<=2:
                 head = Element.parse(selector_string)
             else:
@@ -590,7 +607,7 @@ class Selector(StaticAbstract):
 
     def match(self, element):
         if self.conn_type==None or self.head==None:
-            return self.tail.match(element)
+            return bool(self.tail.match(element))
         else:
             head_match_value = False
             if self.conn_type == Selector.HAS_ALSO:
@@ -617,8 +634,7 @@ class Selector(StaticAbstract):
                     if self.head.match(e):
                         head_match_value = True
                         break
-
-            return self.tail.match(element) and head_match_value
+            return bool(self.tail.match(element) and head_match_value)
 
     def merge(self, other):
         if self != other:
@@ -626,7 +642,7 @@ class Selector(StaticAbstract):
         return self
 
     def render(self, flags=0):
-        if flags&StaticAbstract.INLINE:
+        if flags&CSSAbstract.INLINE:
             return ""
 
         if self.conn_type==None or self.head==None:
@@ -644,9 +660,11 @@ class Selector(StaticAbstract):
                 return self.head.render(flags)+"~"+self.tail.render(flags)
 
 
-class Style(StaticAbstract):
+class Style(CSSAbstract, StaticAbstract):
+    instance_count = 0
     UNIVERSAL_EMPTY_STYLE = "* {}"
     def __init__(self,selector,*properties):
+        super(Style,self).__init__()
         self.selector = selector
         self.properties = list(properties)
         self.inline = False
@@ -686,7 +704,6 @@ class Style(StaticAbstract):
 
     @inherited.setter
     def inherited(self, val):
-        # print "Setting inherited to {}".format(val)
         for p in self.properties:
             p.inherited = val
         self._inherited = val
@@ -725,6 +742,7 @@ class Style(StaticAbstract):
                 *[p.get_copy() for p in self.properties])
         new_style.inline = self.inline
         new_style.inherited = inherited or self.inherited
+        new_style._instance_no = self._instance_no
         return new_style
 
     @classmethod
@@ -740,7 +758,9 @@ class Style(StaticAbstract):
 
     @classmethod
     def parse(cls, inpt):
-        #there should only be 1 style, so that will be the only one we care about
+        # there should only be 1 style, so that will be the only one we care about
+        # the use of '_parse_css' method was to allow for the possibility
+        # of creating nested styles in the future
         match_obj = cls._parse_css(inpt)
         if match_obj:
             match_obj = match_obj.next()
@@ -773,7 +793,7 @@ class Style(StaticAbstract):
 
     def render(self, flags=0):
         rendered_string = ""
-        if flags&StaticAbstract.INLINE:
+        if flags&CSSAbstract.INLINE:
             for attribute in self.properties:
                 rendered_string+=attribute.render(flags)
         else:

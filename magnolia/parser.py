@@ -4,7 +4,6 @@ import inspect
 import page
 from configs import config
 from css import Selector
-import html
 
 class HTMLTestError(Exception):
     pass
@@ -67,7 +66,7 @@ class Parser:
                         func.__name__))
             # if provided, construct the selector object
             selector_obj = self._get_selector_obj(selector)
-            # the actual decorator
+            # the function wrapper
             @functools.wraps(func)
             def inner(element):
                 if not selector_obj or selector_obj.match(element):
@@ -98,12 +97,13 @@ class Parser:
             rule.func(tag)
 
     def render(self, fname):
+        print "Generatig html/css trees"
         html_page = page.HTMLPreprocessor(fname, root=self.project_dir, path=self.path).load()
+        print "Applying css"
         html_page.apply_css()
-        priority_list = sorted(self._render_rules.items(), key=lambda r: r[0])
+        print "Applying html rules"
 
-        print '-'*35+"\nAPPLYING RULES\n"+'-'*35
+        priority_list = sorted(self._render_rules.items(), key=lambda r: r[0])
         for priority,rules in priority_list:
-            print "\nLayer {}\n".format(priority)+'-'*15
             html_page.element_tree.map(lambda tag: self._func_caller(tag,rules))
         return html_page.element_tree
