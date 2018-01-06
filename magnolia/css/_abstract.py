@@ -18,42 +18,19 @@ class Trie(object):
         cur_d = self.trie
         for n,c in enumerate(item):
             if not c in cur_d:
-                inserted = False
-                for k in cur_d.keys():
-                    if k.startswith(c):
-                        cur_d[c]={}
-                        if len(k)>1:
-                            cur_d[c][k[1:]] = {}
-                        del cur_d[k]
-                        inserted = True
-                        break
-                if not inserted:
-                    cur_d[item[n:]] = {}
-                    break
+                cur_d[c]={}
             cur_d = cur_d[c]
 
     def seg_contains(self,c):
-        if isinstance(self._seg_d, dict):
-            if not c in self._seg_d:
-                for k in self._seg_d.keys():
-                    if k.startswith(c):
-                        self._seg_d = k
-                        return
-                self.seg_reset()
-                return False
-            elif len(self._seg_d[c])<1:
-                self.seg_reset()
-                return True
-            else:
-                self._seg_d = self._seg_d[c]
-        elif isinstance(self._seg_d,str):
-            self._seg_i+=1
-            if self._seg_i>=len(self._seg_d)-1:
-                self.seg_reset()
-                return True
-            elif not c==self._seg_d[self._seg_i]:
-                self.seg_reset()
-                return False
+        # if isinstance(self._seg_d, dict):
+        if not c in self._seg_d:
+            self.seg_reset()
+            return False
+        elif len(self._seg_d[c])<1:
+            self.seg_reset()
+            return True
+        else:
+            self._seg_d = self._seg_d[c]
 
     def seg_reset(self):
         self._seg_d = self.trie
@@ -63,9 +40,6 @@ class Trie(object):
         cur_d = self.trie
         for n,c in enumerate(item):
             if not c in cur_d:
-                for k in cur_d.keys():
-                    if k.startswith(c):
-                        return k==item[n:]
                 return False
             elif len(cur_d[c])<1:
                 return True
@@ -101,18 +75,18 @@ INHERITED_ATTRIBUTES = ["caption-side","caret-color","color","cursor",
                         "widows","word-break","word-spacing","word-wrap",
                         "writing-mode"]
 
-PSEUDO_CLASSES = ["active","any","checked","default","dir","disabled","empty",
-                  "enabled","first","first-child","first-of-type","fullscreen",
-                  "focus","hover","indeterminate","in-range","invalid","lang",
-                  "last-child","last-of-type","left","link","not","nth-child",
-                  "nth-last-child","nth-last-of-type","nth-of-type",
-                  "only-child","only-of-type","optional","out-of-range",
-                  "read-only","read-write","required","right","root","scope",
-                  "target","valid","visited"]
+PSEUDO_CLASSES = ["any","dir","not","lang","left","link","root","empty",
+                  "first","focus","hover","right","scope","valid","active",
+                  "target","checked","default","enabled","invalid","visited",
+                  "disabled","in-range","optional","required","nth-child",
+                  "read-only","fullscreen","last-child","only-child",
+                  "read-write","first-child","nth-of-type","last-of-type",
+                  "only-of-type","out-of-range","first-of-type",
+                  "indeterminate","nth-last-child","nth-last-of-type"]
 
-PSEUDO_ELEMENTS = ["after","before","cue","first-letter","first-line",
-                   "selection","backdrop","placeholder","marker",
-                   "spelling-error","grammar-error"]
+PSEUDO_ELEMENTS = ["cue","after","before","marker","backdrop","selection",
+                   "first-line","placeholder","first-letter","grammar-error",
+                   "spelling-error"]
 
 PC_TRIE = Trie(*PSEUDO_CLASSES)
 PE_TRIE = Trie(*PSEUDO_ELEMENTS)
@@ -162,6 +136,7 @@ class CSSAbstract():
     INLINE = 1
     AT_RULES = 2
     STYLES = 4
+    INHERITED = 8
 
     _instance_counter = 0
 
@@ -284,7 +259,9 @@ class StaticAbstract():
 
     PSEUDO_TOKENIZER = re.compile(r"::?(?P<name>{pseudo_names})"
                                   r"(?:\((?P<argument>.*)\))?".format(
-                                   pseudo_names="|".join(PSEUDO_CLASSES+PSEUDO_ELEMENTS)),re.DOTALL)
+                                    pseudo_names="|".join(
+                                    sorted(PSEUDO_CLASSES+PSEUDO_ELEMENTS,key=lambda i:len(i),
+                                        reverse=True))),re.DOTALL)
 
     @classmethod
     def _tokenize_selector(cls,inpt):

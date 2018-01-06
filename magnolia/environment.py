@@ -1,3 +1,4 @@
+""" This is a declaration for a much later update """
 class Environment(object):
     """ used to simulate a browser environment"""
     def __init__(self, width, height, device=None, user_agent=None):

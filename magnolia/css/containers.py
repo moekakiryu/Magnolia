@@ -9,7 +9,10 @@ class StyleSheet(CSSAbstract, ContainerAbstract, StaticAbstract):
     def __init__(self):
         super(StyleSheet,self).__init__()
         self._items = []
+        
         self._style_map = {}
+        self._styles = []
+        self._at_rules = [] #todo: make this a map
 
     def __repr__(self):
         return "CSS Stylesheet ({} styles)".format(len(self._items))
@@ -27,16 +30,29 @@ class StyleSheet(CSSAbstract, ContainerAbstract, StaticAbstract):
         return item in self._items
 
     def add(self, item):
+        sorted_insert(self._items, item)
         if isinstance(item, Style):
-            sorted_insert(self._items, item)
+            sorted_insert(self._styles, item)
+            if not item.selector.tail in self._style_map:
+                self._style_map[item.selector.tail] = []
+            sorted_insert(self._style_map[item.selector.tail],item)
         elif isinstance(item, AtRule):
-            sorted_insert(self._items, item)
+            sorted_insert(self._styles, item)
+            sorted_insert(self._at_rules, item)
         else:
             raise TypeError("'item' must be of type 'Style' or type 'AtRule'")
 
     def remove(self, item):
         if self.has(item):
             self._items.remove(item)
+            if isinstance(item,Style) and item in self._styles:
+                self._styles.remove(item)
+                self._style_map[item.selector.tail].remove(item)
+                if not self._style_map[item.selector.tail]:
+                    del self._style_map[item.selector.tail]
+            elif isinstance(item, AtRule):
+                self._at_rules.remove(item)
+
 
     def has_property(self, name):
         for item in self._items:
@@ -94,8 +110,13 @@ class StyleSheet(CSSAbstract, ContainerAbstract, StaticAbstract):
 
     def match(self, element):
         matching = []
-        for item in self._items:
-            child_match = item.match(element)
+        for style_stub in self._style_map:
+            if style_stub.match(element):
+                for style in self._style_map[style_stub]:
+                    if style.match(element):
+                        matching.append(style)
+        for at_rule in self._at_rules:
+            child_match = at_rule.match(element)
             if child_match:
                 matching.append(child_match)
         return matching
@@ -121,12 +142,14 @@ class StyleSheet(CSSAbstract, ContainerAbstract, StaticAbstract):
             inline_style = Style.parse(Style.UNIVERSAL_EMPTY_STYLE)
             for item in self._items:
                 if isinstance(item, Style):
-                    inline_style.merge(item, False)
+                    if not item.inherited or flags&CSSAbstract.INHERITED:
+                        inline_style.merge(item, False)
             rendered_string+=inline_style.render(flags)
         else:
             for item in self._items:
                 if flags&CSSAbstract.AT_RULES and isinstance(item, AtRule):
-                        rendered_string+=item.render(flags)
+                    rendered_string+=item.render(flags)
                 if flags&CSSAbstract.STYLES and isinstance(item, Style):
+                    if not item.inherited or flags.CSSAbstract.INHERITED:
                         rendered_string+=item.render(flags)
         return rendered_string

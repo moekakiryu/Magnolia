@@ -113,28 +113,28 @@ class AtRule(CSSAbstract, StaticAbstract, DynamicAbstract, ContainerAbstract):
     def parse(cls, inpt):
         return cls._parse(inpt)
 
-    def _match(self, element, head=None):
-        if self.evaluate():
-            new_rule = self.get_copy(True)
-            has_match = False
-            for child in self.children:
-                if isinstance(child, AtRule):
-                    new_child = child._match(element, new_rule)
-                    if new_child and len(new_child.children)>0:
-                        has_match = True
-                        new_rule.add(new_child)
-                elif isinstance(child, Style):
-                    if child.match(element):
-                        has_match = True
-                        new_rule.add(child)
-            if has_match:
-                return new_rule
-            else:
-                return None
-        return None
+    def _match_styles(self, element, head=None):
+        new_rule = self.get_copy(True)
+        has_match = False
+        for child in self.children:
+            if isinstance(child, AtRule):
+                new_child = child._match_styles(element, new_rule)
+                if new_child and len(new_child.children)>0:
+                    has_match = True
+                    new_rule.add(new_child)
+            elif isinstance(child, Style):
+                if child.match(element):
+                    has_match = True
+                    new_rule.add(child)
+        if has_match:
+            return new_rule
+        else:
+            return None
 
     def match(self, element):
-        return self._match(element)
+        if self.evaluate():
+            return self._match_styles(element)
+        return None
 
     def merge(self, other):
         if self==other:
@@ -154,7 +154,10 @@ class AtRule(CSSAbstract, StaticAbstract, DynamicAbstract, ContainerAbstract):
         if self.is_block:
             rendered_string+="{ "
             for child in self.children:
-                rendered_string += self._indent("\n"+child.render(flags))
+                if (not isinstance(child, Style) or not child.inherited 
+                    or flags&CSSAbstract.INHERITED):
+                    rendered_string += self._indent("\n"+child.render(flags))
+
             rendered_string+="\n}\n"
         else:
             rendered_string+="; "

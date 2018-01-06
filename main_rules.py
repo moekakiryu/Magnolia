@@ -1,11 +1,15 @@
 import sys,os
 import time
 import urllib2
-import multiprocessing
+import threading
+import Queue
 
 from magnolia import Parser
 from magnolia.css import Style
 from magnolia import html, css
+from magnolia import tests
+
+running_in_idle = 'idlelib.run' in sys.modules
 
 class ShellColors:
     _base = "\33[{bold:1d};{color}m"
@@ -30,17 +34,19 @@ class ShellColors:
     def colorify(string, color):
         return color+str(string)+ShellColors.reset
 
-running_in_idle = 'idlelib.run' in sys.modules
+# configure the parser
 
 main = Parser(os.path.abspath('.'),path=[r"%appdata%/magnolia/styles/",])
 main.configure(
-   reference_tags_as_attributes=False,
-   auto_close_tags=False,
+   reference_elements_as_attributes=False,
+   auto_close_elements=False,
 )
 used_styles = css.StyleSheet()
 
-NUM_PROCESSES = 5
-url_queue = multiprocessing.Queue()
+# set up multiprocessing stuff
+
+NUM_THREADS = 5
+url_queue = Queue.Queue()
 
 def url_worker(queue):
     while True:
@@ -64,6 +70,8 @@ def url_worker(queue):
         else:
             print "  {}:'{}' ({})".format(ShellColors.colorify(resp_code,ShellColors.red),
                                           url,tag.name)
+
+# Define the rules
 
 @main.html_rule()
 def validate_styles(tag):
@@ -109,17 +117,17 @@ def validate_tables(tag):
         tag.set_attribute("border","0")
             
 @main.html_rule(pass_num=1)
-def remove_disallowed_tags(tag):
+def remove_disallowed_elements(tag):
     if tag.name in ['style','link','script']:
         tag.parent.remove_child(tag)
 
 @main.html_rule(pass_num=1)
-def remove_empty_tags(tag):
+def remove_empty_elements(tag):
     if tag.get_empty():
         if tag.name=="td":
             tag.clear_children()
             tag.add_child(html.TextElement.parse("&nbsp;"))
-        elif tag.has_parent() and not tag.name in html.EMPTY_TAGS:
+        elif tag.has_parent() and not tag.name in html.VOID_ELEMENTS:
             tag.parent.remove_child(tag)
 
 @main.html_rule("html>head:first-child",pass_num=999)
@@ -128,20 +136,33 @@ def add_style_tag(tag):
     new_tag.add_text(used_styles.render(Style.AT_RULES))
     tag.insert_child(new_tag,0)
 
+# run the program
+print "Running tests:\n"+'-'*25
+tests.run()
+# sys.exit()
+
 s_time = time.time()
-print "Parsing element tree:\n"
+print "\nParsing element tree:\n"+'-'*25
 
 if not running_in_idle:
-    url_process_pool = multiprocessing.Pool(NUM_PROCESSES,url_worker,initargs=(url_queue,))
+    threads = []
+    for n in range(NUM_THREADS):
+        t = threading.Thread(target=url_worker, args=(url_queue,))
+        t.setDaemon(True)
+        t.start()
+        threads.append(t)
+    # url_process_pool = multiprocessing.Pool(NUM_THREADS,url_worker,initargs=(url_queue,))
 
-element_tree = main.render("main.html")
+element_tree = main.render("main2.html")
 
 if not running_in_idle:
-    for process in range(NUM_PROCESSES):
+    for process in range(NUM_THREADS):
         url_queue.put((None, None))
-    url_queue.close()
-    url_process_pool.close()
-    url_process_pool.join()
+    # url_queue.close()
+    for thread in threads:
+        thread.join()
+    # url_process_pool.close()
+    # url_process_pool.join()
 
 e_time = time.time()
 print "\nFinished in {:.2f}s".format(e_time-s_time)

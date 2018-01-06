@@ -42,9 +42,10 @@ class Property():
 
     def get_priority(self, other):
         priority = [0,0,0]
-        priority[0] = not self.inherited
-        priority[1] = self.inline
-        priority[2] = self.style.selector.compare_priority(other.style.selector)
+        priority[0] = int(not self.inherited)
+        priority[1] = int(self.inline)
+        if self.style and other.style:
+            priority[2] = self.style.selector.compare_priority(other.style.selector)
         return priority
 
     def compare_priority(self, other):
@@ -62,9 +63,11 @@ class Property():
 
     def merge(self, other):
         if self.name==other.name:
-            if not self.important or other.important:
-                if self.style != None and other.style != None and \
-                   self.compare_priority(other)<=0:
+            if other.important and not self.important:
+                self.value = other.value
+            elif not self.important or other.important:
+                if (self.style != None and other.style != None 
+                    and self.compare_priority(other)<=0):
                     self.value = other.value
 
     def get_copy(self, parent=None):
@@ -79,11 +82,251 @@ class Property():
     def render(self, flags=0):
         rendered_string  = ""
         rendered_string += "{}:{}".format(self.name,self.value)
+        if self.important:
+            rendered_string += "!important"
         if not flags&CSSAbstract.INLINE:
             rendered_string = "\t"+rendered_string
-            if self.important:
-                rendered_string += "!important"
         return rendered_string+";"
+
+
+class AttributeFilter(StaticAbstract):
+    HAS = 0
+    EQUALS = 1
+    STARTS_WITH = 2
+    STARTS_WITH_WORD = 4
+    ENDS_WITH = 8
+    CONTAINS = 16
+    CONTAINS_WORD = 32
+
+    def __init__(self, attribute, filter_type=None, value=None):
+        self.attribute = attribute
+        self.value = value
+        self.filter_type = filter_type
+
+    def __eq__(self, other):
+        return isinstance(other, AttributeFilter) and self.attribute==other.attribute and \
+                self.filter_type==other.filter_type and self.value==other.value
+
+    def __ne__(self, other):
+        return not self == other
+
+    def get_copy(self):
+        return AttributeFilter(self.attribute, self.filter_type, self.value)
+
+    @classmethod
+    def parse(cls, inpt):
+        inpt = inpt.strip()
+        tokenized = re.finditer(cls.FILTER_TOKENIZER,inpt).next()
+        name = tokenized.group("name")
+        if tokenized.group("value"):
+            value = tokenized.group("value")
+            if tokenized.group("type") == "^":
+                filter_type = cls.STARTS_WITH
+            elif tokenized.group("type") == "|":
+                filter_type = cls.STARTS_WITH_WORD
+            elif tokenized.group("type") == "$":
+                filter_type = cls.ENDS_WITH
+            elif tokenized.group("type") == "*":
+                filter_type = cls.CONTAINS
+            elif tokenized.group("type") == "~":
+                filter_type = cls.CONTAINS_WORD
+            else:
+                filter_type = cls.EQUALS
+        else:
+            filter_type = None
+            value = None
+        return AttributeFilter(name, filter_type, value)
+
+    def match(self, element):
+        if element.has_attribute(self.attribute):
+            if self.filter_type == None:
+                return True
+            else:
+                attribute_value = element.get_attribute(self.attribute)
+                if self.filter_type == AttributeFilter.EQUALS:
+                    return attribute_value == self.value
+
+                elif self.filter_type == AttributeFilter.STARTS_WITH:
+                    return attribute_value.startswith(self.value)
+
+                elif self.filter_type == AttributeFilter.STARTS_WITH_WORD:
+                    return (attribute_value == self.value) or \
+                           (attribute_value.startswith(self.value+'-'))
+
+                elif self.filter_type == AttributeFilter.ENDS_WITH:
+                    return attribute_value.endswith(self.value)
+
+                elif self.filter_type == AttributeFilter.CONTAINS:
+                    return self.value in attribute_value
+
+                elif self.filter_type == AttributeFilter.CONTAINS_WORD:
+                    return re.search(r"\b{}\b".format(self.value),attribute_value)
+
+    def merge(self, other):
+        if self != other:
+            raise ValueError("behavior for merging non-equivalent elements is undefined")
+        return self
+
+    def render(self,flags=0):
+        if flags&CSSAbstract.INLINE:
+            return ""
+        if self.filter_type==None:
+            return self.attribute
+        else:
+            output_template = '{}{}="{}"'
+            if self.filter_type == AttributeFilter.EQUALS:
+                return output_template.format(self.attribute,'',self.value)
+            elif self.filter_type == AttributeFilter.STARTS_WITH:
+                return output_template.format(self.attribute,'^',self.value)
+            elif self.filter_type == AttributeFilter.STARTS_WITH_WORD:
+                return output_template.format(self.attribute,'|',self.value)
+            elif self.filter_type == AttributeFilter.ENDS_WITH:
+                return output_template.format(self.attribute,'$',self.value)
+            elif self.filter_type == AttributeFilter.CONTAINS:
+                return output_template.format(self.attribute,'*',self.value)
+            elif self.filter_type == AttributeFilter.CONTAINS_WORD:
+                return output_template.format(self.attribute,'~',self.value)
+
+
+class Pseudo(StaticAbstract):
+    def __init__(self, name, argument=None):
+        self.name = name
+        self.argument = argument
+
+    def __eq__(self,other):
+        return isinstance(other, Pseudo) and \
+                (self.name==other.name and self.argument==other.argument)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def get_priority(self):
+        return 1
+
+    def get_copy(self):
+        return Pseudo(self.name, self.argument)
+
+    @staticmethod
+    def _parse_equation(inpt):
+        inpt=inpt.lower()
+        if inpt=="even":
+            inpt="2n"
+        elif inpt=="odd":
+            inpt="2n+1"
+        a = 1
+        b = 0
+        if not "n" in inpt:
+            try:
+                b = int(inpt)
+                return lambda k:k==b
+            except ValueError:
+                return lambda k:False
+        pre_n,post_n = inpt.split("n")
+        pre_n.replace("*","")
+        if pre_n=="-" or pre_n=="+":
+            pre_n+="1"
+        try:
+            a = int(pre_n)
+        except ValueError:
+            pass
+        try:
+            b = int(post_n)
+        except ValueError:
+            pass
+        return lambda k: ((k-b)/float(a)).is_integer() and ((k-b)/float(a))>=0
+
+    @classmethod
+    def parse(cls, inpt):
+        tokenized = re.finditer(cls.PSEUDO_TOKENIZER, inpt).next()
+        name = tokenized.group("name")
+        if tokenized.group("argument") != None:
+            if name=="nth-child" or name=="nth-of-type":
+                argument = cls._parse_equation(tokenized.group("argument").strip())
+            else:
+                argument = Selector.parse(tokenized.group("argument").strip())
+        else:
+            argument = None
+        return Pseudo(name, argument)
+
+    def match(self, element):
+        # unfortunately, as each pseudo-class has unique behaviour, each one
+        # has to be programmed for individually
+        #
+        # also, pseudo-classes whose behaviour can not be determined from the
+        # DOM (such as ':hover') are ignored and assumed False (to avoid 
+        # accidentally applying hover styles to a normal element, to contiue
+        # from the example before). Due to their complexity, pseudo-classes
+        # relating to input elements are not currently supported either
+        #
+        # honestly, it is a shame python does not have switch statements, as 
+        # this is the perfect case for one
+        #
+        if self.name == "empty":
+            return element.get_empty()
+        elif self.name == "first-child":
+            if element.has_parent():
+                return element.get_parent().get_elements().index(element)==0
+            else:
+                return True
+        elif self.name == "first-of-type":
+            if element.has_parent():
+                return element.get_parent().get_elements(element.name).index(element)==0
+            else:
+                return True
+        elif self.name == "last-child":
+            if element.has_parent():
+                children = element.get_parent().get_elements()
+                return children.index(element)==len(children)-1
+            else:
+                return True
+        elif self.name == "last-of-type":
+            if element.has_parent():
+                children = element.get_parent().get_elements(element.name)
+                return children.index(element)==len(children)-1
+            else:
+                return True
+        elif self.name == "nth-child":
+            if element.has_parent():
+                children = element.get_parent().get_elements()
+                return self.argument(children.index(element)+1)
+            else:
+                return True
+        elif self.name == "nth-of-type":
+            if element.has_parent():
+                children = element.get_parent().get_elements(element.name)
+                return self.argument(children.index(element)+1)
+            else:
+                return True
+        elif self.name == "only-child":
+            if element.has_parent():
+                children = element.get_parent().get_elements()
+                return len(children)==1 and element in children
+            else:
+                return True
+        elif self.name == "only-of-type":
+            if element.has_parent():
+                children = element.get_parent().get_elements(element.name)
+                return len(children)==1 and element in children
+            else:
+                return True
+        elif self.name == "not":
+            return not self.argument.match(element)
+
+    def merge(self, other):
+        if self != other:
+            raise ValueError("behavior for merging non-equivalent pseudo-elements is undefined")
+        return self
+
+    def render(self, flags=0):
+        if flags&CSSAbstract.INLINE:
+            return ""
+        output_string = ":"
+        if self.name in PSEUDO_ELEMENTS:
+            output_string+=":"
+        output_string += self.name
+        if self.argument:
+            output_string+="({})".format(self.argument)
+        return output_string
 
 
 class Element(StaticAbstract):
@@ -240,245 +483,6 @@ class Element(StaticAbstract):
         return rendered_string
 
 
-class AttributeFilter(StaticAbstract):
-    HAS = 0
-    EQUALS = 1
-    STARTS_WITH = 2
-    STARTS_WITH_WORD = 4
-    ENDS_WITH = 8
-    CONTAINS = 16
-    CONTAINS_WORD = 32
-
-    def __init__(self, attribute, filter_type=None, value=None):
-        self.attribute = attribute
-        self.value = value
-        self.filter_type = filter_type
-
-    def __eq__(self, other):
-        return isinstance(other, AttributeFilter) and self.attribute==other.attribute and \
-                self.filter_type==other.filter_type and self.value==other.value
-
-    def __ne__(self, other):
-        return not self == other
-
-    def get_copy(self):
-        return AttributeFilter(self.attribute, self.filter_type, self.value)
-
-    @classmethod
-    def parse(cls, inpt):
-        inpt = inpt.strip()
-        tokenized = re.finditer(cls.FILTER_TOKENIZER,inpt).next()
-        name = tokenized.group("name")
-        if tokenized.group("value"):
-            value = tokenized.group("value")
-            if tokenized.group("type") == "^":
-                filter_type = cls.STARTS_WITH
-            elif tokenized.group("type") == "|":
-                filter_type = cls.STARTS_WITH_WORD
-            elif tokenized.group("type") == "$":
-                filter_type = cls.ENDS_WITH
-            elif tokenized.group("type") == "*":
-                filter_type = cls.CONTAINS
-            elif tokenized.group("type") == "~":
-                filter_type = cls.CONTAINS_WORD
-            else:
-                filter_type = cls.EQUALS
-        else:
-            filter_type = None
-            value = None
-        return AttributeFilter(name, filter_type, value)
-
-    def match(self, element):
-        if element.has_attribute(self.attribute):
-            if self.filter_type == None:
-                return True
-            else:
-                attribute_value = element.get_attribute(self.attribute)
-                if self.filter_type == AttributeFilter.EQUALS:
-                    return attribute_value == self.value
-
-                elif self.filter_type == AttributeFilter.STARTS_WITH:
-                    return attribute_value.startswith(self.value)
-
-                elif self.filter_type == AttributeFilter.STARTS_WITH_WORD:
-                    return (attribute_value == self.value) or \
-                           (attribute_value.startswith(self.value+'-'))
-
-                elif self.filter_type == AttributeFilter.ENDS_WITH:
-                    return attribute_value.endswith(self.value)
-
-                elif self.filter_type == AttributeFilter.CONTAINS:
-                    return self.value in attribute_value
-
-                elif self.filter_type == AttributeFilter.CONTAINS_WORD:
-                    return re.search(r"\b{}\b".format(self.value),attribute_value)
-
-    def merge(self, other):
-        if self != other:
-            raise ValueError("behavior for merging non-equivalent elements is undefined")
-        return self
-
-    def render(self,flags=0):
-        if flags&CSSAbstract.INLINE:
-            return ""
-        if self.filter_type==None:
-            return self.attribute
-        else:
-            output_template = '{}{}="{}"'
-            if self.filter_type == AttributeFilter.EQUALS:
-                return output_template.format(self.attribute,'',self.value)
-            elif self.filter_type == AttributeFilter.STARTS_WITH:
-                return output_template.format(self.attribute,'^',self.value)
-            elif self.filter_type == AttributeFilter.STARTS_WITH_WORD:
-                return output_template.format(self.attribute,'|',self.value)
-            elif self.filter_type == AttributeFilter.ENDS_WITH:
-                return output_template.format(self.attribute,'$',self.value)
-            elif self.filter_type == AttributeFilter.CONTAINS:
-                return output_template.format(self.attribute,'*',self.value)
-            elif self.filter_type == AttributeFilter.CONTAINS_WORD:
-                return output_template.format(self.attribute,'~',self.value)
-
-class Pseudo(StaticAbstract):
-    def __init__(self, name, argument=None):
-        self.name = name
-        self.argument = argument
-
-    def __eq__(self,other):
-        return isinstance(other, Pseudo) and \
-                (self.name==other.name and self.argument==other.argument)
-
-    def __ne__(self, other):
-        return not self == other
-
-    def get_priority(self):
-        return 1
-
-    def get_copy(self):
-        return Pseudo(self.name, self.argument)
-
-    @staticmethod
-    def _parse_equation(inpt):
-        inpt=inpt.lower()
-        if inpt=="even":
-            inpt="2n"
-        elif inpt=="odd":
-            inpt="2n+1"
-        a = 1
-        b = 0
-        if not "n" in inpt:
-            try:
-                b = int(inpt)
-                return lambda k:k==b
-            except ValueError:
-                return lambda k:False
-        pre_n,post_n = inpt.split("n")
-        pre_n.replace("*","")
-        if pre_n=="-" or pre_n=="+":
-            pre_n+="1"
-        try:
-            a = int(pre_n)
-        except ValueError:
-            pass
-        try:
-            b = int(post_n)
-        except ValueError:
-            pass
-        return lambda k: ((k-b)/float(a)).is_integer() and ((k-b)/float(a))>=0
-
-    @classmethod
-    def parse(cls, inpt):
-        tokenized = re.finditer(cls.PSEUDO_TOKENIZER, inpt).next()
-        name = tokenized.group("name")
-        if tokenized.group("argument") != None:
-            if name=="nth-child" or name=="nth-of-type":
-                argument = cls._parse_equation(tokenized.group("argument").strip())
-            else:
-                argument = Selector.parse(tokenized.group("argument").strip())
-        else:
-            argument = None
-        return Pseudo(name, argument)
-
-    def match(self, element):
-        # unfortunately, as each pseudo-class has unique behaviour, each one
-        # has to be programmed for individually
-        #
-        # also, pseudo-classes whose behaviour can not be determined from the
-        # DOM (such as ':hover') are ignored and assumed False (to avoid 
-        # accidentally applying hover styles to a normal element, to contiue
-        # from the example before). Due to their complexity, pseudo-classes
-        # relating to input elements are not currently supported either
-        #
-        # honestly, it is a shame python does not have switch statements, as 
-        # this is the perfect case for one
-        #
-        if self.name == "empty":
-            return element.get_empty()
-        elif self.name == "first-child":
-            if element.has_parent():
-                return element.get_parent().get_tags().index(element)==0
-            else:
-                return True
-        elif self.name == "first-of-type":
-            if element.has_parent():
-                return element.get_parent().get_tags(element.name).index(element)==0
-            else:
-                return True
-        elif self.name == "last-child":
-            if element.has_parent():
-                children = element.get_parent().get_tags()
-                return children.index(element)==len(children)-1
-            else:
-                return True
-        elif self.name == "last-of-type":
-            if element.has_parent():
-                children = element.get_parent().get_tags(element.name)
-                return children.index(element)==len(children)-1
-            else:
-                return True
-        elif self.name == "nth-child":
-            if element.has_parent():
-                children = element.get_parent().get_tags()
-                return self.argument(children.index(element)+1)
-            else:
-                return True
-        elif self.name == "nth-of-type":
-            if element.has_parent():
-                children = element.get_parent().get_tags(element.name)
-                return self.argument(children.index(element)+1)
-            else:
-                return True
-        elif self.name == "only-child":
-            if element.has_parent():
-                children = element.get_parent().get_tags()
-                return len(children)==1 and element in children
-            else:
-                return True
-        elif self.name == "only-of-type":
-            if element.has_parent():
-                children = element.get_parent().get_tags(element.name)
-                return len(children)==1 and element in children
-            else:
-                return True
-        elif self.name == "not":
-            return not self.argument.match(element)
-
-    def merge(self, other):
-        if self != other:
-            raise ValueError("behavior for merging non-equivalent pseudo-elements is undefined")
-        return self
-
-    def render(self, flags=0):
-        if flags&CSSAbstract.INLINE:
-            return ""
-        output_string = ":"
-        if self.name in PSEUDO_ELEMENTS:
-            output_string+=":"
-        output_string += self.name
-        if self.argument:
-            output_string+="({})".format(self.argument)
-        return output_string
-
-
 class Selector(StaticAbstract):
     HAS_ALSO = 0
     HAS_CHILD = 1
@@ -580,7 +584,6 @@ class Selector(StaticAbstract):
         tail = Element.parse(''.join([element.type, element.name,
                                       element.attribute, element.pseudo_class, 
                                       element.pseudo_element]))
-
         if len(tokens)>1:
             parent = tokens[-2]
             if parent.conn_type:
@@ -705,7 +708,10 @@ class Style(CSSAbstract, StaticAbstract):
     @inherited.setter
     def inherited(self, val):
         for p in self.properties:
-            p.inherited = val
+            if not p.name in INHERITED_ATTRIBUTES:
+                self.properties.remove(p)
+            else:
+                p.inherited = val
         self._inherited = val
 
     def add_property(self,prop,value=None):
